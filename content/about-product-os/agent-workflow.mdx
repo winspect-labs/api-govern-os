@@ -1,0 +1,77 @@
+---
+title: Agent Workflow
+category: about-product-os
+last_updated: 2026-03-01
+---
+
+# Agent Workflow
+
+This page is a reference for AI agents operating in repositories that use Product OS. It defines the principles agents should follow and the data they should read and write. For setup instructions (workspace configuration, rule files), see [Developer Workflow](/about-product-os/developer-workflow).
+
+## Principles
+
+1. **Product OS is the source of truth.** Vision, features, backlog, architecture decisions, and research live in this repository. Do not rely on scattered documentation, issue trackers, or assumptions.
+
+2. **Load context before acting.** Before implementing a feature, scoping work, or answering "what should I build next?", read the relevant Product OS data. The data files and content pages listed below contain the authoritative state.
+
+3. **Update when you ship.** When code changes implement a feature or backlog item, propose an update to Product OS. The preferred mechanism is a pull request. Set `status: shipped`, update `completion`, and adjust any related backlog items.
+
+4. **Surface conflicts.** If a user requests something that contradicts Product OS—building a deprecated feature, ignoring a recorded decision, working on something not in the backlog—surface the conflict. Suggest aligning with Product OS rather than silently proceeding.
+
+## What to Read
+
+### Before implementing
+
+| File | Purpose |
+|------|---------|
+| `data/features.yaml` | Current features, their status, acceptance criteria, and linked repositories |
+| `data/backlog.yaml` | Prioritized work items with type, effort, status, and acceptance criteria |
+| `data/goals.yaml` | Strategic goals that features and backlog items map to |
+| `data/repositories.yaml` | Which code repositories implement which features |
+| `content/features/<id>.mdx` | Narrative specification, user stories, design rationale |
+| `content/decisions/` | Architecture and product decision records (PDRs/ADRs) |
+
+### Before making architectural choices
+
+Read `content/decisions/` to check whether a relevant decision has already been recorded. If the choice at hand is significant and no prior record exists, propose creating one.
+
+## What to Update
+
+### After code ships
+
+1. **`data/features.yaml`** — Set `status: shipped` and `completion: 100` (or the appropriate value for partial completion).
+2. **`data/backlog.yaml`** — Mark the corresponding item as `status: shipped`.
+3. **`content/features/<id>.mdx`** — Update if the implementation diverged from the original specification.
+
+### When recording decisions
+
+Create a new file in `content/decisions/` following the PDR template in `templates/`. Include the context, options considered, decision, and consequences.
+
+## Validation
+
+Before committing changes to Product OS, run:
+
+```bash
+npm run validate
+```
+
+This checks YAML schema compliance and cross-references between data files and content.
+
+## Autonomous Task Pickup
+
+Product OS supports a workflow where agents pick up small, well-defined items from the backlog and implement them without human initiation. This works when:
+
+- The backlog item has `type: bug` or `type: small-feature` with `effort: small`
+- Acceptance criteria are clearly defined
+- The item is linked to a feature and repository
+
+The flow:
+
+1. Agent reads `data/backlog.yaml`, filters for items matching the criteria above.
+2. Agent loads the linked feature specification and repository context.
+3. Agent creates a branch, implements against the acceptance criteria, runs tests.
+4. Agent opens a pull request with a description that references the backlog item.
+5. A human reviews and merges.
+6. Agent proposes a Product OS update (status: shipped).
+
+This pipeline depends on the structured intake that Product OS provides. Without clear acceptance criteria and a standard data format, autonomous pickup is not reliable. See [Product Manager Workflow](/about-product-os/product-manager-workflow) for how PMs should structure items to enable this.

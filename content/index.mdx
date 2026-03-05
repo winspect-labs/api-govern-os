@@ -4,16 +4,7 @@ title: Home
 
 # Product OS
 
-An opinionated framework for product management of modern tech products. Keep a bird's-eye view of your product—vision, features, backlog, research, and decisions—in one structured, agent-friendly knowledge base.
-
-## Why Product OS?
-
-Solo developers and small teams struggle to maintain a coherent view across multiple repos, specs, and docs. Product OS gives you:
-
-- **Single source of truth** — All product knowledge in one place
-- **Agent-friendly structure** — YAML data files and frontmatter for AI workflows
-- **Structured, not sprawl** — Clear sections: Product, Features, Architecture, Backlog, Research, Decisions, Metrics
-- **Optional access control** — Protect IP with GitHub OAuth (org members only)
+A structured product knowledge base for teams that use AI agents alongside human engineers and product managers. Product OS consolidates vision, features, backlog, architecture decisions, and research into a single repository—so product knowledge and code stay in sync.
 
 ## Quick Links
 
@@ -25,9 +16,18 @@ Solo developers and small teams struggle to maintain a coherent view across mult
 - [Decisions](/decisions) — Product and architecture decision records
 - [Metrics](/metrics) — KPIs and benchmarks
 
+## About Product OS
+
+- [Why Product OS](/about-product-os/value-proposition) — The drift problem, design principles, and how it fits alongside existing tools
+- [Developer Workflow](/about-product-os/developer-workflow) — Concepts, setup, daily workflow for engineers
+- [Product Manager Workflow](/about-product-os/product-manager-workflow) — Defining work, specifications, tracking progress, delegating to agents
+- [Agent Workflow](/about-product-os/agent-workflow) — Reference for AI agents: principles, data files, update protocol
+- [Agent Rules for Repos](/about-product-os/rules-for-product-repos) — Rule content to add to each code repository
+
 ## Get Started
 
 1. Fork this repo
 2. Replace example content with your product data
 3. Update `data/features.yaml`, `data/backlog.yaml`, and other data files
-4. (Optional) Enable GitHub OAuth for private deployments
+4. Add agent rules to your code repositories (see [Developer Workflow](/about-product-os/developer-workflow))
+5. (Optional) Enable GitHub OAuth for private deployments

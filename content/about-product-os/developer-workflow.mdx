@@ -1,0 +1,129 @@
+---
+title: Developer Workflow
+category: about-product-os
+last_updated: 2026-03-01
+---
+
+# Working with Product OS
+
+## The Problem This Solves
+
+In most organizations, product knowledge lives in a constellation of tools—issue trackers, wikis, slide decks, Slack threads, someone's memory. When an engineer picks up a task, they spend time reconstructing context. When a product manager asks "what shipped last quarter?", the answer requires archaeology.
+
+Product OS consolidates product knowledge into a single, structured repository. It is designed so that both humans and AI agents can read from it and write to it. The structure is intentional: YAML data files for machine consumption, MDX content for human reading, and a generated site for browsing.
+
+The workflow described here is not specific to any particular editor or AI tool. Whether you use Cursor, Claude Code, Windsurf, Copilot, or something that doesn't exist yet—the principles are the same. The repository is the interface.
+
+## Concepts
+
+### The Repository as Contract
+
+Product OS is a git repository. That matters. It means every change is versioned, reviewable, and attributable. When an agent updates a feature's status from `in-progress` to `shipped`, that change goes through a pull request. A human reviews it. The git log becomes an audit trail of product evolution.
+
+This is different from a wiki or a project management tool where changes happen silently. Here, the repository itself is the contract between product and engineering.
+
+### Data and Content Separation
+
+Product OS separates **structured data** from **narrative content**:
+
+- `data/` contains YAML files (`features.yaml`, `backlog.yaml`, `goals.yaml`, `repositories.yaml`). These are the machine-readable source of truth. Agents read and write these directly.
+- `content/` contains MDX files organized by topic (features, architecture, decisions, research). These provide context, rationale, and detail that structured data cannot capture.
+
+This separation is deliberate. An agent deciding what to implement next reads `data/backlog.yaml`. A product manager reviewing the reasoning behind a technical decision reads `content/decisions/PDR-001.mdx`. Both are authoritative; they serve different purposes.
+
+### Agent-Agnostic Design
+
+The rules and conventions described here use the concept of "agent rules"—configuration files that tell AI agents how to behave in a given repository. The specific mechanism varies by tool:
+
+| Tool | Rule mechanism |
+|------|---------------|
+| Cursor | `.cursor/rules/*.mdc` files |
+| Claude Code | `CLAUDE.md` at repo root |
+| Windsurf | `.windsurfrules` or project-level config |
+| GitHub Copilot | `.github/copilot-instructions.md` |
+| Others | Equivalent project-level instruction files |
+
+The content of the rule is the same regardless of tool. Only the file location and format differ. See [Rules for Product Repos](/about-product-os/rules-for-product-repos) for the canonical rule content.
+
+## Setup
+
+### 1. Make Product OS Accessible to Your Editor
+
+The agent working in your code repository needs to be able to read Product OS files. There are two common approaches:
+
+**Multi-root workspace**: Open both your code repository and the Product OS repository in the same workspace. Most editors support this. The agent can then reference files across both.
+
+**Sibling directory convention**: Clone Product OS alongside your code repositories so the relative path `../product-os` resolves. This is simpler and works across all tools.
+
+```
+~/Source/
+  ├── product-os/          # Product OS repository
+  ├── frontend-app/        # Your product code
+  └── backend-service/     # Your product code
+```
+
+### 2. Add Agent Rules to Product Repos
+
+Each code repository that implements product features should include an agent rule pointing to Product OS. The rule tells agents:
+
+1. Read Product OS before implementing or scoping work.
+2. Do not contradict Product OS. Surface conflicts.
+3. Update Product OS when code ships.
+
+Create the rule file in the appropriate location for your tool (see the table above). The rule content is documented in [Rules for Product Repos](/about-product-os/rules-for-product-repos).
+
+### 3. Validate the Connection
+
+Ask your agent: *"What features are currently in progress?"*
+
+If setup is correct, the agent will read `data/features.yaml` and answer from Product OS data. If it guesses or asks you to provide the information, the workspace configuration needs adjustment.
+
+## Daily Workflow
+
+### For Engineers
+
+**Starting work**: When you begin a task, the agent should already have Product OS context (via the rule). You can ask it to check the backlog, review a feature specification, or look up an architectural decision. The agent reads the relevant YAML and MDX files.
+
+Example interactions:
+
+- *"What's the next high-priority item in the backlog?"* → Agent reads `data/backlog.yaml`, filters by priority and status.
+- *"What are the acceptance criteria for the search feature?"* → Agent reads the feature's MDX file in `content/features/`.
+- *"Why did we choose PostgreSQL over DynamoDB?"* → Agent reads `content/decisions/`.
+
+**Shipping work**: When a feature or backlog item is complete and merged, Product OS should be updated. The preferred approach is for the agent to create a pull request against the Product OS repository:
+
+- Update `data/features.yaml` (e.g., `status: shipped`, `completion: 100`)
+- Update `data/backlog.yaml` if applicable
+- Run `npm run validate` to ensure data integrity
+
+This can happen in three ways, depending on your team's preference:
+
+1. **Agent-assisted**: Tell your agent *"I just shipped the search feature. Update Product OS."* The agent creates a PR.
+2. **Manual**: Edit the YAML files directly, validate, commit, push.
+3. **Automated**: A CI pipeline detects merged PRs with certain labels and triggers a Product OS update (see PR conventions below).
+
+### For Product Managers
+
+See [Product Manager Workflow](/about-product-os/product-manager-workflow) for the full PM guide: defining work, writing specifications, tracking progress, and delegating tasks to agents.
+
+## PR Conventions
+
+Linking code changes to Product OS items makes the update cycle reliable. Use labels or commit conventions your team agrees on:
+
+| Convention | Example |
+|-----------|---------|
+| PR label | `product-os:feat-search` or `product-os:bl-042` |
+| Commit scope | `feat(search): add full-text search to reports` |
+| PR title prefix | `[search] Add full-text search to reports` |
+
+These conventions enable automation: a CI job can detect the label, look up the corresponding item in Product OS, and either update it automatically or open a PR proposing the update.
+
+## Checklist for New Teams
+
+- [ ] Product OS repository is forked or created for your product
+- [ ] Product OS is accessible from engineers' workspaces (multi-root or sibling directory)
+- [ ] Agent rule is added to each product repository (in the appropriate format for your tool)
+- [ ] Team understands the data/content separation and knows where to find things
+- [ ] PMs know how to add backlog items and review the generated site
+- [ ] PR conventions are agreed upon
+- [ ] `npm run validate` runs in CI for the Product OS repository

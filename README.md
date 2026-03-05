@@ -1,15 +1,18 @@
 # Product OS
 
-An opinionated framework for product management of modern tech products. Keep a bird's-eye view of your product—vision, features, backlog, research, and decisions—in one structured, agent-friendly knowledge base.
+A structured product knowledge base designed for teams that use AI agents alongside human engineers and product managers. Product OS consolidates vision, features, backlog, architecture decisions, and research into a single git repository—with YAML data files for machine consumption, MDX content for human reading, and a generated site for browsing.
 
-## Why Product OS?
+The core idea: product knowledge and code should stay in sync. Agents read Product OS for context before implementing, and update it when code ships. Humans review and make decisions. The repository is the contract between product and engineering.
 
-Solo developers and small teams struggle to maintain a coherent view across multiple repos, specs, and docs. Product OS gives you:
+## Documentation
 
-- **Single source of truth** — All product knowledge in one place
-- **Agent-friendly structure** — YAML data files and frontmatter for AI workflows
-- **Structured, not sprawl** — Clear sections: Product, Features, Architecture, Backlog, Research, Decisions, Metrics
-- **Optional access control** — Protect IP with GitHub OAuth (org members only)
+Read on the [generated site](/about-product-os) or on GitHub:
+
+- [Why Product OS](content/about-product-os/value-proposition.mdx) — The drift problem, design principles, and how Product OS fits alongside existing tools
+- [Developer Workflow](content/about-product-os/developer-workflow.mdx) — Concepts, setup, daily workflow for engineers, PR conventions
+- [Product Manager Workflow](content/about-product-os/product-manager-workflow.mdx) — Defining work, writing specifications, tracking progress, delegating to agents
+- [Agent Workflow](content/about-product-os/agent-workflow.mdx) — Reference for AI agents: principles, data files, update protocol
+- [Agent Rules for Repos](content/about-product-os/rules-for-product-repos.mdx) — Rule content to add to each code repository (Cursor, Claude Code, Windsurf, Copilot, etc.)
 
 ## Quick Start
 
@@ -40,6 +43,42 @@ product-os/
 ├── templates/        # Templates for new content
 ├── components/       # Custom MDX components (StatusBadge, FeatureTable, etc.)
 └── app/              # Nextra 4 + Next.js App Router
+```
+
+## Customization (Forking / Building On)
+
+When forking or building on Product OS, customize branding and theme in **`config/site.config.ts`**:
+
+### Branding
+
+| Option | Description |
+|--------|-------------|
+| `productName` | Your product/company name (nav, footer, page title) |
+| `logo` | Image path (e.g. '/logo.svg' in `public/`) or custom React component |
+| `favicon` | Optional favicon path |
+| `subscript` | Footer text, e.g. "Powered by Product OS" for attribution |
+
+### Theme
+
+| Option | Description |
+|--------|-------------|
+| `theme.colors` | `primaryHue`, `primarySaturation`, `backgroundLight`, `backgroundDark` |
+| `theme.customCSS` | Path to extra CSS (e.g. '/theme/override.css' in `public/`) |
+
+**Custom CSS:** Edit `styles/custom.css` for overrides (always loaded). Use CSS variables like `--nextra-primary-hue` to customize.
+
+### Example
+
+```ts
+// config/site.config.ts
+export const branding = {
+  productName: 'Acme Platform',
+  logo: '/logo.svg',  // place in public/logo.svg
+  subscript: 'Powered by Product OS',
+}
+export const theme = {
+  colors: { primaryHue: 260, primarySaturation: 90 },
+}
 ```
 
 ## Enabling Auth (Private Deployments)

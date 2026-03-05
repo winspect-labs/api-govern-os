@@ -1,6 +1,8 @@
 {
   "index": "Home",
+  "about-product-os": "About Product OS",
   "product": "Product",
+  "goals": "Goals",
   "features": "Features",
   "architecture": "Architecture",
   "backlog": "Backlog",

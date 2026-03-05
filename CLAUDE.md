@@ -1,6 +1,12 @@
 # Product OS — Agent Interaction Guide
 
-This repository is designed for AI agents to read, reason about, and recommend product decisions. Follow these guidelines when interacting with Product OS.
+Product OS is **built for agents, by agents**. It is the ultimate source of truth for product knowledge. Agents get context from this repo and **update it as the product evolves**. Humans stay aware and review; agents do the heavy lifting. Kill the drift.
+
+- **Agents read** — Load Product OS before implementing or scoping work.
+- **Agents write** — Update Product OS when code ships. Create PRs.
+- **Augment, don't replace** — Jira, Linear, and other tools augment Product OS. We don't eliminate them.
+
+**Full workflow**: See [content/about-product-os/agent-workflow.mdx](content/about-product-os/agent-workflow.mdx) for context preparation, when to read/update, and automation.
 
 ## Data Sources (Machine-Readable)
 
@@ -8,16 +14,18 @@ This repository is designed for AI agents to read, reason about, and recommend p
 
 | File | Purpose | Use For |
 |------|---------|---------|
-| `data/features.yaml` | Feature registry with status, priority, completion | Feature status reports, gap analysis |
-| `data/backlog.yaml` | Prioritized backlog with ICE scores | What to build next, prioritization |
+| `data/features.yaml` | Feature registry with status, priority, completion, goal_ids, links | Feature status reports, gap analysis |
+| `data/backlog.yaml` | Prioritized backlog with ICE scores, goal_ids, links | What to build next, prioritization |
+| `data/goals.yaml` | Strategic goals (OKRs) with status active/accomplished | Goal tracking, feature/backlog mapping |
 | `data/repositories.yaml` | Repo map, tech stack, ownership | Architecture overview, dependency mapping |
 | `data/research-sources.yaml` | Cited sources for research | Fact-checking, traceability |
 | `data/roadmap.yaml` | Timeline-based roadmap | Timeline alignment |
 
 ### How to Read Data
 
-1. **Features:** Parse `data/features.yaml` for the full feature list. Each feature has `id`, `name`, `status`, `priority`, `completion`, `repos`.
-2. **Backlog:** Parse `data/backlog.yaml` for ordered items. ICE scores (impact, confidence, ease) indicate priority.
+1. **Features:** Parse `data/features.yaml` for the full feature list. Each feature has `id`, `name`, `status`, `priority`, `completion`, `repos`, `goal_ids`, `links`.
+2. **Backlog:** Parse `data/backlog.yaml` for ordered items. ICE scores (impact, confidence, ease) indicate priority. Items may have `goal_ids` and `links`.
+3. **Goals:** Parse `data/goals.yaml` for strategic goals. Use `goal_ids` on features/backlog to map work to goals. Mark goals `accomplished` when done.
 3. **Research:** Parse `data/research-sources.yaml` for cited sources. Reference by `id` in research reports.
 
 ## Content Structure

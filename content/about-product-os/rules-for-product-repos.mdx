@@ -1,0 +1,82 @@
+---
+title: Agent Rules for Product Repos
+category: about-product-os
+last_updated: 2026-03-01
+---
+
+# Agent Rules for Product Repos
+
+Each code repository that implements product features should include an agent rule that points to Product OS. The rule ensures agents treat Product OS as the source of truth—reading it before implementing, and updating it when code ships.
+
+The rule content is the same regardless of which AI tool you use. Only the file location differs.
+
+## Where to Place the Rule
+
+| Tool | File path |
+|------|-----------|
+| Cursor | `.cursor/rules/product-os-source-of-truth.mdc` |
+| Claude Code | Include in `CLAUDE.md` at repo root |
+| Windsurf | Include in `.windsurfrules` at repo root |
+| GitHub Copilot | Include in `.github/copilot-instructions.md` |
+| Others | Equivalent project-level instruction file |
+
+## Rule Content
+
+Copy the following into the appropriate file for your tool. Adjust the path to Product OS if your directory layout differs.
+
+```markdown
+# Product OS — Source of Truth
+
+Product OS is the canonical source of product knowledge. It contains the vision,
+features, backlog, architecture decisions, and research for this product. Agents
+should read it for context and update it when code ships.
+
+## Principles
+
+1. **Load Product OS context first** — Before implementing or scoping work, read
+   `data/features.yaml`, `data/backlog.yaml`, and relevant files in `content/`.
+2. **Align with Product OS** — Do not implement features that are deprecated or
+   contradict Product OS. If the user's request conflicts with Product OS, surface
+   the conflict and suggest aligning.
+3. **Update Product OS when you ship** — When code implements a feature or backlog
+   item, create a PR to update Product OS (e.g. set `status: shipped`,
+   `completion: 100`). Agents propose the update; humans review.
+
+## Product OS Location
+
+- **Path**: `../product-os` (relative to this repo)
+- **Key files**: `data/features.yaml`, `data/backlog.yaml`, `data/goals.yaml`,
+  `data/repositories.yaml`
+- **Documentation**: See the About Product OS section on the generated site, or
+  read `content/about-product-os/` in the repository.
+```
+
+## Path Options
+
+The rule references `../product-os` as the default path. Adjust based on your setup:
+
+| Setup | Path |
+|-------|------|
+| Sibling directories | `../product-os` |
+| Monorepo subfolder | `./product-os` or `../../product-os` |
+| Multi-root workspace | Use the workspace folder name |
+| Absolute path | `/Users/you/Source/product-os` (less portable) |
+
+## For the Product OS Repository Itself
+
+The Product OS repository benefits from its own maintenance rule. This rule applies when editing data or content files and reminds agents to keep things consistent.
+
+For Cursor, place this in `.cursor/rules/product-os-maintainer.mdc`. For other tools, include it in the equivalent instruction file.
+
+```markdown
+# Product OS Maintenance
+
+When editing Product OS data and content:
+
+- When updating `data/features.yaml`, ensure the corresponding file in
+  `content/features/` exists and reflects the current state.
+- When updating `data/backlog.yaml`, consider whether `content/backlog/items/`
+  needs a corresponding entry.
+- Run `npm run validate` before committing to catch schema or consistency errors.
+- Use templates in `templates/` when creating new content files.
+```

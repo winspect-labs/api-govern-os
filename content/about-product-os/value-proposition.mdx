@@ -1,0 +1,64 @@
+---
+title: Why Product OS
+category: about-product-os
+last_updated: 2026-03-01
+---
+
+# Why Product OS
+
+## The Drift Problem
+
+Every product team experiences the same failure mode. At the start of a project, specifications are written, priorities are set, and everyone shares a common understanding. Then development begins, and the understanding fragments. Specifications live in Confluence. Priorities live in Jira. Architecture decisions live in someone's head or a Slack thread from three months ago. Status lives in a standup. By the time a product manager asks "where are we?", the answer requires cross-referencing four tools and two people's memories.
+
+This is drift. The gap between what the product *should be* and what the product *is*. It is not a tooling problem in the conventional sense—it is a structural one. Knowledge is scattered across systems that don't talk to each other, maintained by people who have other things to do.
+
+## The Structural Fix
+
+Product OS addresses drift by consolidating product knowledge into a single git repository with a deliberate structure:
+
+- **Structured data** (`data/*.yaml`) — Features, backlog items, goals, and repository mappings in machine-readable format. This is what agents consume and update.
+- **Narrative content** (`content/*.mdx`) — Specifications, decision records, research, and architecture documentation. This is what humans read for context and rationale.
+- **A generated site** — The repository renders as a browsable website. No separate wiki to maintain.
+
+The key insight is that the same repository serves both audiences. An agent deciding what to implement next reads `data/backlog.yaml`. A product manager reviewing the reasoning behind a technical choice reads `content/decisions/PDR-001.mdx`. Neither needs to leave the system.
+
+## Design Principles
+
+### The repository is the contract
+
+Product OS is a git repository. Changes go through pull requests. Every update is versioned, reviewable, and attributable. This is different from a wiki or project management tool where changes happen silently and history is difficult to reconstruct.
+
+When an agent updates a feature's status from `in-progress` to `shipped`, that change is a commit. A human reviews it. The git log becomes an audit trail of how the product evolved—not just the code, but the intent behind it.
+
+### Agents are first-class participants
+
+Product OS assumes that AI agents do a significant share of the work: reading specifications, implementing features, updating status. The data format (YAML with clear schemas) and the content format (MDX with frontmatter) are chosen because agents can parse and generate them reliably.
+
+This is not about replacing human judgment. It is about removing the manual maintenance that causes drift. Agents handle the bookkeeping; humans handle the decisions.
+
+### Augment, don't replace
+
+Product OS does not eliminate Jira, Linear, or whatever project management tool a team already uses. It provides a canonical layer underneath. Jira can link to Product OS items, sync status from it, or feed into it. The goal is not to consolidate all workflow into one tool—it is to ensure that one place holds the authoritative state of the product.
+
+Teams that use Jira for sprint planning can continue to do so. The difference is that the source of truth for "what is this feature, what are its acceptance criteria, and is it shipped" lives in Product OS, not in a Jira ticket that may or may not be current.
+
+## What Changes in Practice
+
+| Before | After |
+|--------|-------|
+| Specifications drift from implementation. Updates are manual and often skipped. | Agents update Product OS when code ships. Status stays current without human effort. |
+| Product managers maintain Jira tickets, Confluence pages, and slide decks independently. | Product managers define work in one place. Agents keep it in sync with reality. |
+| Engineers ask "where's the spec?" or "what's the priority?" and get pointed to three different tools. | Agents read Product OS directly. Context is always available, always current. |
+| Architecture decisions are tribal knowledge or buried in old documents. | Decision records live in the repository, versioned and searchable. |
+| Answering "what shipped last quarter?" requires archaeology. | Query the data files or ask an agent. The answer is in the commit history. |
+
+## Who This Is For
+
+Product OS is useful to any team where product knowledge and code are maintained by different people (or different agents) and need to stay aligned. It is particularly relevant for teams that:
+
+- Use AI agents for implementation and want those agents to have reliable product context
+- Have product managers who want to define and track work without maintaining separate documentation systems
+- Ship frequently and find that specifications fall behind
+- Want an audit trail of product decisions, not just code changes
+
+The [Developer Workflow](/about-product-os/developer-workflow) and [Product Manager Workflow](/about-product-os/product-manager-workflow) pages describe the day-to-day mechanics for each role.

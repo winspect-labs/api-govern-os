@@ -1,0 +1,212 @@
+---
+title: Product Manager Workflow
+category: about-product-os
+last_updated: 2026-03-01
+---
+
+# Product Manager Workflow
+
+## What Product OS Means for PMs
+
+Product OS is not another tool to learn or maintain. It is the place where product decisions are recorded in a format that both humans and AI agents can act on. The key shift: instead of writing specifications in one system, tracking status in another, and hoping they stay aligned—you write once, in Product OS, and agents keep it current as code ships.
+
+This page covers the practical workflow: how to define work, how to track progress, how to write specifications, and how to delegate small tasks to agents.
+
+## Understanding the Structure
+
+Product OS has two layers that matter for PMs:
+
+**Data files** (`data/`) contain the structured, machine-readable state of the product. These are YAML files with defined schemas. When you add a backlog item or define a feature, you're editing these files (or asking an agent to edit them for you). Agents read these files to decide what to implement and update them when code ships.
+
+**Content files** (`content/`) contain the narrative: specifications, decision records, research, architecture documentation. These are MDX files—Markdown with optional components—organized by topic. When you need to explain *why* a feature exists, what the user stories are, or what tradeoffs were considered, this is where it goes.
+
+You don't need to understand YAML syntax or git commands to use Product OS. You can ask an agent to make changes for you. But understanding the structure helps you know what's possible and where to look.
+
+## Defining Work
+
+### Backlog items
+
+The backlog lives in `data/backlog.yaml`. Each item has a standard set of fields:
+
+```yaml
+- id: bl-042
+  title: Add export to CSV on the reports page
+  type: small-feature
+  effort: small
+  priority: medium
+  status: proposed
+  acceptance_criteria:
+    - User can click "Export" on any report
+    - CSV includes all visible columns
+    - Download starts within 2 seconds
+  feature_id: feat-reports
+```
+
+The fields that matter most:
+
+| Field | Why it matters |
+|-------|---------------|
+| `type` | `feature`, `small-feature`, `bug`, `improvement`, `research`. Agents use this to filter and prioritize. |
+| `effort` | `small`, `medium`, `large`. Determines whether an agent can pick it up autonomously (small items) or whether it needs human planning. |
+| `priority` | `critical`, `high`, `medium`, `low`. Agents respect this when choosing what to work on next. |
+| `status` | `proposed`, `approved`, `in-progress`, `shipped`, `deferred`. The lifecycle of the item. |
+| `acceptance_criteria` | A list of concrete, testable conditions. This is what agents implement against. Vague criteria produce vague implementations. |
+| `feature_id` | Links the item to a feature in `data/features.yaml`. Gives agents the broader context. |
+
+You can add items by editing the file directly, or by asking an agent: *"Add a medium-priority bug to the backlog: the date picker shows the wrong timezone for UTC users. It should respect the user's timezone setting. Link it to the settings feature."*
+
+### Bugs
+
+Bugs use the same backlog format with `type: bug`:
+
+```yaml
+- id: bl-043
+  title: Date picker shows wrong timezone for UTC users
+  type: bug
+  effort: small
+  priority: high
+  status: proposed
+  acceptance_criteria:
+    - Date picker respects user's timezone setting
+    - UTC users see correct dates
+  feature_id: feat-settings
+```
+
+The distinction between bugs and features matters for triage. Agents can be configured to prioritize bugs over features, or to pick up small bugs autonomously while leaving features for human-initiated work.
+
+### Features
+
+Features live in `data/features.yaml` and represent larger units of work. A feature typically has multiple backlog items associated with it:
+
+```yaml
+- id: feat-reports
+  title: Reporting Dashboard
+  status: in-progress
+  completion: 40
+  goal_ids: [goal-visibility]
+  repos: [frontend-app, backend-service]
+  description: Consolidated reporting view with export capabilities
+```
+
+For features that need more than a few fields of description, create a corresponding MDX file in `content/features/`. This is where user stories, design rationale, wireframe references, and scope boundaries go. The feature ID links the data entry to the content file.
+
+## Writing Specifications
+
+For anything beyond a small backlog item, write a specification in `content/features/`. A specification is an MDX file with frontmatter:
+
+```mdx
+---
+title: Reporting Dashboard
+feature_id: feat-reports
+status: in-progress
+last_updated: 2026-03-01
+---
+
+# Reporting Dashboard
+
+## Context
+
+Users currently export data manually from three different screens.
+The reporting dashboard consolidates these into a single view with
+filtering, sorting, and export capabilities.
+
+## User Stories
+
+- As a team lead, I want to see key metrics for the past 30 days
+  so I can prepare for the weekly review without manual data gathering.
+- As an analyst, I want to export filtered data to CSV so I can
+  run custom analyses in a spreadsheet.
+
+## Scope
+
+In scope:
+- Consolidated dashboard with date range filtering
+- CSV export for all visible data
+- Saved filter presets
+
+Out of scope (for now):
+- PDF export
+- Scheduled email reports
+- Custom dashboard layouts
+
+## Design Considerations
+
+We chose server-side filtering over client-side because the dataset
+can exceed 100k rows. The tradeoff is slightly higher latency on
+filter changes, but it avoids loading large datasets into the browser.
+```
+
+Agents read these specifications when implementing. The more concrete the acceptance criteria and scope boundaries, the more reliably agents can implement without back-and-forth.
+
+A common failure mode: specifications that describe *what* but not *why* or *what's excluded*. Agents are literal. If the scope boundary isn't stated, they may implement something you didn't intend, or miss something you assumed was obvious.
+
+## Tracking Progress
+
+### The generated site
+
+Product OS renders as a website. You can browse features, backlog items, decisions, and research without touching a code editor. Bookmark it. This is your dashboard.
+
+### Asking agents
+
+You can ask an agent to summarize the current state:
+
+- *"What features are currently in progress?"*
+- *"What shipped this week?"*
+- *"What high-priority bugs are open?"*
+- *"What's the completion status of the reporting dashboard?"*
+
+The agent reads the data files and answers from the current state. This is more reliable than asking a person, because the data is updated by agents when code ships.
+
+### Status lifecycle
+
+Items move through a standard lifecycle:
+
+```
+proposed → approved → in-progress → shipped
+                   ↘ deferred
+```
+
+- **proposed**: PM has defined the item. Not yet approved for implementation.
+- **approved**: Ready for an agent or engineer to pick up.
+- **in-progress**: Someone (or an agent) is working on it.
+- **shipped**: Code is merged and deployed. Agent updates this automatically.
+- **deferred**: Intentionally postponed. Include a reason in the item or a linked decision record.
+
+## Delegating Trivial Tasks to Agents
+
+One of the more useful patterns in Product OS: you define a small, well-scoped item in the backlog, and an agent picks it up, implements it, and opens a pull request—without a human initiating the work.
+
+This works when three conditions are met:
+
+1. **The item is small and well-defined.** `type: bug` or `type: small-feature`, `effort: small`, with concrete acceptance criteria.
+2. **The item is linked to a feature and repository.** The agent needs to know where the code lives and what the broader context is.
+3. **The acceptance criteria are testable.** "Improve the UX" is not actionable. "The date picker should respect the user's timezone setting" is.
+
+The flow from your perspective:
+
+1. You add the item to `data/backlog.yaml` with status `approved`.
+2. An agent (triggered by a schedule, a webhook, or a human prompt) picks it up.
+3. The agent reads the feature specification, implements the change, runs tests, and opens a PR.
+4. You (or an engineer) review and merge the PR.
+5. The agent updates Product OS to reflect the shipped status.
+
+This is not magic. It works because the structured format gives agents enough context to act autonomously on small, bounded tasks. It does not work for ambiguous requirements, large features, or anything that requires product judgment. Those still need human initiation and oversight.
+
+## Working with Engineers
+
+Product OS creates a shared surface between product and engineering. A few conventions that help:
+
+**Reference Product OS in discussions.** Instead of "the feature we talked about in standup," use "feat-reports in Product OS." The ID is unambiguous and the specification is always current.
+
+**Review agent-proposed updates.** When agents update Product OS after shipping code, those updates come as pull requests. Reviewing them is how you stay aware of what shipped and whether the implementation matches the specification.
+
+**Use decision records.** When a significant product or technical decision is made, ask for a decision record in `content/decisions/`. This is not bureaucracy—it is the answer to "why did we do it this way?" six months from now, when no one remembers the conversation.
+
+## Getting Started
+
+If you're new to Product OS:
+
+1. **Browse the generated site.** Get a sense of what's there: features, backlog, decisions, architecture.
+2. **Read one feature specification.** Pick a feature in `content/features/` and read the MDX file. This is what agents see when they implement.
+3. **Add a backlog item.** Either edit `data/backlog.yaml` directly or ask an agent to do it. Start with a small bug or enhancement.
+4. **Watch the cycle.** When the item is implemented and shipped, check that Product OS was updated. This is the feedback loop that keeps everything in sync.
