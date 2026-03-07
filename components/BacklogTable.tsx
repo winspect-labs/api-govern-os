@@ -1,57 +1,90 @@
-import { loadBacklog } from '@/lib/loadData'
+import { loadBacklog, loadGoals } from '@/lib/loadData'
 import { PriorityBadge } from './PriorityBadge'
+import { ICEBar } from './ICEBar'
+import { DataTable } from './DataTable'
 
 export function BacklogTable() {
   const items = loadBacklog()
+  const goals = loadGoals()
 
   if (items.length === 0) {
     return (
-      <div className="my-4 rounded-lg border border-slate-200 dark:border-slate-700 p-4 text-sm text-slate-500 dark:text-slate-400">
-        No backlog items in data/backlog.yaml. Add entries to see them here.
-      </div>
+      <DataTable>
+        <div className="p-10 text-center">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          No backlog items in <code className="rounded bg-slate-200/80 dark:bg-slate-700/80 px-1.5 py-0.5">data/backlog.yaml</code>. Add entries to see them here.
+        </p>
+        </div>
+      </DataTable>
     )
   }
 
   return (
-    <div className="my-4 overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700">
-      <table className="min-w-full divide-y divide-slate-200 dark:divide-slate-700">
-        <thead>
-          <tr>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-              #
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-              Title
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-              Priority
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-              Status
-            </th>
-            <th className="px-4 py-3 text-left text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
-              ICE Score
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-          {items.map((item, i) => (
-            <tr key={item.id}>
-              <td className="px-4 py-3 text-sm text-slate-500">{i + 1}</td>
-              <td className="px-4 py-3 text-sm font-medium">{item.title}</td>
-              <td className="px-4 py-3">
-                <PriorityBadge priority={item.priority as 'P0' | 'P1' | 'P2' | 'P3'} />
-              </td>
-              <td className="px-4 py-3 text-sm capitalize">{item.status}</td>
-              <td className="px-4 py-3 text-sm">
-                {item.ice
-                  ? `I:${item.ice.impact} C:${item.ice.confidence} E:${item.ice.ease}`
-                  : '-'}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTable>
+      <div className="divide-y divide-slate-200 dark:divide-slate-700/60">
+      {items.map((item, i) => (
+        <div
+          key={item.id}
+          className="group flex flex-col gap-4 px-6 py-4 transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/30 sm:flex-row sm:items-center sm:justify-between"
+        >
+          <div className="flex min-w-0 flex-1 items-start gap-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-sm font-semibold text-slate-600 dark:text-slate-400">
+              {i + 1}
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-medium text-slate-900 dark:text-slate-100">
+                {item.title}
+              </h3>
+              {item.description && (
+                <p className="mt-1 text-sm text-slate-500 dark:text-slate-400 line-clamp-2">
+                  {item.description}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-3 sm:shrink-0">
+              {item.links?.map((link) => (
+                <a
+                  key={link.url}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex shrink-0 items-center whitespace-nowrap rounded border border-slate-200 dark:border-slate-600/80 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                >
+                  {link.label} →
+                </a>
+              ))}
+              <PriorityBadge priority={item.priority as 'P0' | 'P1' | 'P2' | 'P3'} />
+              <span className="whitespace-nowrap rounded-md bg-slate-100 dark:bg-slate-800 px-2.5 py-1 text-xs font-medium capitalize text-slate-600 dark:text-slate-400">
+                {item.status}
+              </span>
+              {item.goal_ids && item.goal_ids.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {item.goal_ids.map((gid) => {
+                    const goal = goals.find((g) => g.id === gid)
+                    return goal ? (
+                      <span
+                        key={gid}
+                        className="rounded bg-violet-100/80 dark:bg-violet-900/30 px-1.5 py-0.5 text-xs text-violet-700 dark:text-violet-300"
+                      >
+                        {goal.title.split(' ')[0]}
+                      </span>
+                    ) : null
+                  })}
+                </div>
+              )}
+              {item.ice && (
+                <div className="flex items-center gap-2">
+                  <ICEBar ice={item.ice} />
+                  <span className="text-xs text-slate-400 dark:text-slate-500">
+                    I·C·E
+                  </span>
+                </div>
+              )}
+          </div>
+        </div>
+      ))}
+      </div>
+    </DataTable>
   )
 }

@@ -1,11 +1,12 @@
 import { Footer, Layout, Navbar } from 'nextra-theme-docs'
-import { Head, Search } from 'nextra/components'
+import { Search } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 import themeConfig from '../theme.config'
-import 'nextra-theme-docs/style.css'
+import { ThemeHead } from './ThemeHead'
+import './globals.css'
 
 export const metadata = {
-  title: 'Product OS',
+  title: themeConfig.branding?.productName ?? 'Product OS',
   description:
     'An opinionated framework for product management of modern tech products. Agent-friendly structure, single source of truth.',
 }
@@ -19,7 +20,14 @@ const navbar = (
 
 const footer = (
   <Footer>
-    {themeConfig.footer?.text || `Product OS © ${new Date().getFullYear()}`}
+    <div className="flex flex-col gap-1">
+      <span>{themeConfig.footer?.text || `${themeConfig.branding?.productName ?? 'Product OS'} © ${new Date().getFullYear()}`}</span>
+      {themeConfig.footer?.subscript && (
+        <span className="text-xs text-slate-500 dark:text-slate-400">
+          {themeConfig.footer.subscript}
+        </span>
+      )}
+    </div>
   </Footer>
 )
 
@@ -36,7 +44,7 @@ export default async function RootLayout({
 }) {
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
-      <Head />
+      <ThemeHead />
       <body>
         <Layout
           navbar={navbar}

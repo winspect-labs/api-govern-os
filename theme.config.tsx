@@ -1,19 +1,27 @@
+import { Logo } from './components/Logo'
+import { branding, theme } from './config/site.config'
+import { defaultTheme } from './lib/theme'
+
+const colors = { ...defaultTheme, ...theme.colors }
+const year = new Date().getFullYear()
+
 const config = {
   logo: (
-    <div className="flex items-center gap-2">
-      <div className="w-8 h-8 bg-gradient-to-br from-slate-600 to-slate-800 dark:from-slate-500 dark:to-slate-700 rounded-lg flex items-center justify-center">
-        <span className="text-white font-bold text-sm">OS</span>
-      </div>
-      <span className="font-semibold text-lg">Product OS</span>
-    </div>
+    <Logo
+      productName={branding.productName}
+      logo={branding.logo}
+    />
   ),
   project: {
     link: 'https://github.com/winspect-labs/product-os',
   },
   docsRepositoryBase: 'https://github.com/winspect-labs/product-os',
   footer: {
-    text: `Product OS © ${new Date().getFullYear()} — MIT License`,
+    text: `${branding.productName} © ${year} — MIT License`,
+    subscript: branding.subscript,
   },
+  branding,
+  themeConfig: theme,
   search: {
     placeholder: 'Search product knowledge...',
   },
@@ -31,8 +39,8 @@ const config = {
     prev: true,
     next: true,
   },
-  primaryHue: 220,
-  primarySaturation: 80,
+  primaryHue: colors.primaryHue,
+  primarySaturation: colors.primarySaturation,
 }
 
 export default config

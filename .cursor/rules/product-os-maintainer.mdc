@@ -1,0 +1,13 @@
+---
+description: Product OS maintenance — keep data and content in sync, validate before commit
+globs: data/**/*.yaml, content/**/*.mdx
+alwaysApply: false
+---
+
+# Product OS Maintenance
+
+- When updating `data/features.yaml`, ensure corresponding `content/features/*.mdx` exists and is in sync
+- When updating `data/backlog.yaml`, consider adding/updating `content/backlog/items/*.mdx`
+- Run `npm run validate` before committing
+- Use templates in `templates/` for new content
+- See `docs/AGENT_WORKFLOW.md` for when to update each file

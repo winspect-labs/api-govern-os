@@ -15,6 +15,8 @@ export function loadFeatures() {
       priority: string
       completion?: number
       repos?: string[]
+      goal_ids?: string[]
+      links?: Array<{ label: string; url: string }>
     }>
   } catch {
     return []
@@ -30,7 +32,27 @@ export function loadBacklog() {
       title: string
       priority: string
       status: string
+      description?: string
       ice?: { impact: number; confidence: number; ease: number }
+      goal_ids?: string[]
+      links?: Array<{ label: string; url: string }>
+    }>
+  } catch {
+    return []
+  }
+}
+
+export function loadGoals() {
+  try {
+    const content = fs.readFileSync(path.join(dataDir, 'goals.yaml'), 'utf-8')
+    const data = yaml.parse(content)
+    return (data?.goals || []) as Array<{
+      id: string
+      title: string
+      description?: string
+      status: 'active' | 'accomplished'
+      target_date?: string
+      links?: Array<{ label: string; url: string }>
     }>
   } catch {
     return []

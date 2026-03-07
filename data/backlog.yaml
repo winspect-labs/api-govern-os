@@ -11,6 +11,11 @@ items:
       confidence: 7
       ease: 6
     description: SAML/OIDC for enterprise customers
+    goal_ids:
+      - enterprise-readiness
+    links:
+      - label: Jira
+        url: https://jira.example.com/browse/SSO-1
 
   - id: bl-002
     title: API versioning and deprecation
@@ -21,6 +26,11 @@ items:
       confidence: 8
       ease: 5
     description: Version APIs and communicate deprecations
+    goal_ids:
+      - enterprise-readiness
+    links:
+      - label: Linear
+        url: https://linear.app/team/issue/API-42
 
   - id: bl-003
     title: Observability dashboard
@@ -31,3 +41,5 @@ items:
       confidence: 6
       ease: 7
     description: Unified view of logs, metrics, traces
+    goal_ids:
+      - enterprise-readiness

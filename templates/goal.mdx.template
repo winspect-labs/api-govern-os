@@ -1,0 +1,22 @@
+---
+title: "GOAL_TITLE"
+category: goal
+status: active
+last_updated: YYYY-MM-DD
+---
+
+# GOAL_TITLE
+
+## Description
+
+What does success look like? What are we trying to achieve?
+
+## Target
+
+- **Target date:** e.g. Q2 2026
+- **Success criteria:** How do we know we've accomplished this?
+
+## Related Work
+
+- Features: (add feature IDs from data/features.yaml)
+- Backlog: (add backlog IDs from data/backlog.yaml)

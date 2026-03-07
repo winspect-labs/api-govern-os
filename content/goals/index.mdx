@@ -1,0 +1,18 @@
+---
+title: Goals Dashboard
+category: goals
+last_updated: 2026-03-01
+---
+
+# Goals Dashboard
+
+Strategic goals (OKRs or objectives) that features and backlog items contribute to. Mark goals as `accomplished` in `data/goals.yaml` when complete.
+
+<GoalsTable />
+
+## How It Works
+
+- **Goals** live in `data/goals.yaml` with `status: active` or `accomplished`
+- **Features** and **backlog items** reference goals via `goal_ids: [goal-id-1, goal-id-2]`
+- Progress is derived from shipped features that map to each goal
+- Use `links` on goals, features, and backlog items to connect to Jira, Linear, or other tools
