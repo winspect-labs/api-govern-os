@@ -11,6 +11,14 @@ features:
       - acme-backend
       - acme-frontend
     description: Central registry for all APIs with OpenAPI spec support
+    goal_ids:
+      - platform-foundation
+      - beta-launch
+    links:
+      - label: Jira
+        url: https://jira.example.com/browse/API-123
+      - label: Figma
+        url: https://figma.com/file/abc
 
   - id: user-auth
     name: User Authentication
@@ -21,3 +29,6 @@ features:
       - acme-backend
       - acme-frontend
     description: OAuth-based sign-in with GitHub, Google, email/password
+    goal_ids:
+      - platform-foundation
+      - beta-launch

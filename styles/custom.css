@@ -1,0 +1,20 @@
+/**
+ * Custom theme overrides.
+ * Add your CSS here to customize the Product OS theme.
+ *
+ * Example overrides:
+ *
+ * :root {
+ *   --nextra-primary-hue: 260deg;
+ *   --nextra-primary-saturation: 90%;
+ * }
+ *
+ * .dark {
+ *   --nextra-bg: 15,15,20;
+ * }
+ */
+
+/* B2B: spacing between intro content and dashboard tables */
+.nx-prose > h1 + p {
+  margin-bottom: 0.5rem;
+}

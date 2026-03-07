@@ -10,7 +10,7 @@ const priorityStyles: Record<Priority, string> = {
 export function PriorityBadge({ priority }: { priority: Priority }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityStyles[priority]}`}
+      className={`inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium ${priorityStyles[priority]}`}
     >
       {priority}
     </span>

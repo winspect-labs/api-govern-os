@@ -37,7 +37,7 @@ function validateYaml(schemaPath, dataPath) {
 
   const validate = ajv.compile(schema)
   const items =
-    data.features || data.items || data.sources || data.repositories
+    data.features || data.items || data.sources || data.repositories || data.goals
   const key = data.features
     ? 'features'
     : data.items
@@ -46,7 +46,9 @@ function validateYaml(schemaPath, dataPath) {
         ? 'sources'
         : data.repositories
           ? 'repositories'
-          : null
+          : data.goals
+            ? 'goals'
+            : null
 
   if (key && Array.isArray(items)) {
     items.forEach((item, i) => {
@@ -71,6 +73,10 @@ validateYaml(
 validateYaml(
   path.join(root, 'schemas', 'research-source.schema.json'),
   path.join(root, 'data', 'research-sources.yaml')
+)
+validateYaml(
+  path.join(root, 'schemas', 'goal.schema.json'),
+  path.join(root, 'data', 'goals.yaml')
 )
 
 if (hasErrors) {

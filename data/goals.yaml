@@ -1,0 +1,24 @@
+# Product goals - OKRs or strategic objectives
+# Features and backlog items map to goals via goal_ids
+
+goals:
+  - id: platform-foundation
+    title: Platform foundation (auth, catalog, API)
+    description: Core platform capabilities for beta launch
+    status: active
+    target_date: Q1 2026
+    links:
+      - label: OKR doc
+        url: https://example.com/okr-q1
+
+  - id: enterprise-readiness
+    title: Enterprise readiness
+    description: SSO, versioning, observability for enterprise customers
+    status: active
+    target_date: Q2 2026
+
+  - id: beta-launch
+    title: Beta launch
+    description: Ship beta to first 10 design partners
+    status: active
+    target_date: Q1 2026

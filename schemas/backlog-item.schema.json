@@ -7,10 +7,7 @@
     "id": { "type": "string" },
     "title": { "type": "string" },
     "status": { "type": "string" },
-    "priority": {
-      "type": "string",
-      "enum": ["P0", "P1", "P2", "P3"]
-    },
+    "priority": { "type": "string", "enum": ["P0", "P1", "P2", "P3"] },
     "ice": {
       "type": "object",
       "properties": {
@@ -19,6 +16,18 @@
         "ease": { "type": "number", "minimum": 1, "maximum": 10 }
       }
     },
-    "description": { "type": "string" }
+    "description": { "type": "string" },
+    "goal_ids": { "type": "array", "items": { "type": "string" } },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["label", "url"],
+        "properties": {
+          "label": { "type": "string" },
+          "url": { "type": "string" }
+        }
+      }
+    }
   }
 }

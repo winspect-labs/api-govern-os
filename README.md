@@ -16,22 +16,16 @@ Read on the [generated site](/about-product-os) or on GitHub:
 
 ## Quick Start
 
+Fork this repo, then:
+
 ```bash
-# Clone (after creating the repo on GitHub)
-git clone https://github.com/winspect-labs/product-os.git
+git clone https://github.com/<your-org>/product-os.git
 cd product-os
 npm install
 npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000).
-
-**First-time setup:** Create a new public repo (e.g. `winspect-labs/product-os`), then push:
-
-```bash
-git remote add origin https://github.com/winspect-labs/product-os.git
-git push -u origin main
-```
 
 ## Structure
 
