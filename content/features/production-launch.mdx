@@ -1,0 +1,150 @@
+---
+title: Production Launch
+category: feature
+status: in-progress
+priority: P0
+owners: ["api-management-ui", "platform-backend-service"]
+last_updated: 2026-03-01
+tags: ["production", "launch", "ui-polish", "data-isolation", "authorization"]
+---
+
+# Production Launch
+
+Ship Winspect to production — polished UI, working settings, production domain, multi-org data isolation verified, and authorization enforced end-to-end.
+
+## Status
+
+<StatusBadge status="in-progress" /> <PriorityBadge priority="P0" />
+
+## Scope
+
+This is not a single feature but a gate. Before going live, all of the following must pass.
+
+---
+
+## 1. UI Completeness
+
+**Goal**: No unfinished elements visible to users on the production domain.
+
+**Checklist:**
+
+- [ ] All screens have loading states (not blank or broken)
+- [ ] Empty states have helpful messaging and a clear call to action
+- [ ] Form validation messages are correct and consistent
+- [ ] Error responses from the API surface as readable messages (not raw JSON or HTTP codes)
+- [ ] Disabled buttons and locked states are clearly communicated
+- [ ] Navigation and breadcrumbs are consistent across pages
+- [ ] Mobile and narrow viewport layouts are acceptable (not broken)
+
+**Screens to audit:** API list, API detail, API spec editor, team management, user invites, subscriptions, subscriber review, org settings, API keys, mock server, discovery dashboard.
+
+---
+
+## 2. Settings and Configuration
+
+**Goal**: Every settings flow works end-to-end from the UI without silent failures.
+
+**Checklist:**
+
+- [ ] **API keys** — create, enable/disable, delete all reflected in UI and backend
+- [ ] **Org settings** — name update, domain update persist correctly
+- [ ] **Team management** — create team, add/remove members, update team details
+- [ ] **User invites** — invite by email, accept invite, role assigned correctly
+- [ ] **Subscription approval** — submit request, approve/reject, permissions reflected
+- [ ] **Permissions** — VIEW, MANAGE, ADMIN levels enforced; changes take effect immediately
+- [ ] **Mock server** — start/stop, generate responses from spec, access mock endpoint
+
+---
+
+## 3. Production Domain
+
+**Goal**: Winspect is accessible at a reserved production domain with valid TLS.
+
+**Steps:**
+
+1. Reserve domain (e.g. `app.winspect.io`)
+2. Configure DNS to point to Railway / Vercel deployment
+3. Provision TLS certificate (automatic via Railway/Vercel or Let's Encrypt)
+4. Update environment variables:
+   - `NEXTAUTH_URL` — production domain
+   - `NEXT_PUBLIC_API_BASE_URL` — production API URL
+   - Clerk OAuth callback URLs — updated to production domain
+   - CORS allowed origins — production domain added
+5. Verify HTTPS redirect, no mixed-content warnings
+
+---
+
+## 4. Multi-Org Data Isolation
+
+**Goal**: Users in Org A cannot see, access, or act on resources belonging to Org B.
+
+**Test matrix (run with at least 2 independent orgs):**
+
+| Scenario | Expected |
+|----------|----------|
+| User from Org A views APIs | Only sees Org A APIs |
+| User from Org A calls GET /apis with Org B's org-id header | 403 Forbidden |
+| User from Org A attempts to subscribe to Org B API | 403 Forbidden |
+| User from Org A views teams | Only sees Org A teams |
+| Cross-org user invite (Org A inviting Org B user) | Fails or requires explicit acceptance |
+| Super admin views all orgs | Allowed, clearly marked |
+
+ABAC v2 enforces org isolation at policy evaluation step 2 (see [PDR-005](/decisions/PDR-005-abac-v2)). These tests confirm the enforcement holds end-to-end through the UI and API.
+
+---
+
+## 5. Authorization Enforcement
+
+**Goal**: Subscription-based access control works correctly end-to-end.
+
+**Checklist:**
+
+- [ ] Subscription request flow: submit → pending → approved/rejected
+- [ ] Approved subscription grants correct permissions (VIEW, MANAGE, ADMIN)
+- [ ] Rejected subscription grants no permissions
+- [ ] Permissions are immediately reflected in the UI after approval
+- [ ] ABAC policy evaluation: VIEW cannot MANAGE; MANAGE cannot ADMIN
+- [ ] Revoked subscription removes access
+- [ ] Rate limit fields on subscription are stored and visible (enforcement in Phase A of [subscription-authz](/features/subscription-authz))
+
+---
+
+## 6. Production Environment Setup
+
+**Goal**: Production services are provisioned, configured, and healthy.
+
+**Checklist:**
+
+- [ ] Railway production services for `platform-backend-core` and `platform-ai-core`
+- [ ] Environment variables set for production (Clerk prod keys, DB URL, secrets)
+- [ ] Health endpoints respond: `/api-management/actuator/health`, `/actuator/health`
+- [ ] Error monitoring configured (Sentry or equivalent)
+- [ ] Database migrations run cleanly on production DB (`flyway migrate`)
+- [ ] Logs aggregated and accessible
+
+---
+
+## 7. Smoke Test Before Opening
+
+**Goal**: At least two real test organizations run through core flows on the production domain before launch.
+
+**Flow to execute per org:**
+
+1. Create org and invite a second user
+2. Create an API with an OpenAPI spec
+3. Subscribe to an API from a different team
+4. Approve the subscription
+5. Verify permissions are enforced
+6. Create and use an API key
+7. Run a mock server request against a published spec
+
+---
+
+## Completion
+
+~10% — Domain not yet reserved. UI audit not started. Tests not run on production.
+
+## Dependencies
+
+- [API Catalog](/features/api-catalog) — must be fully shipped (it is)
+- [Subscription AuthZ](/features/subscription-authz) — authorization enforcement required for launch gate

@@ -9,11 +9,19 @@ quarters:
       - K8s discovery MVP (bulk import, manual mapping)
       - RAG semantic search polish
       - Soft delete for APIs
+      - UI completeness audit and polish
+      - Settings and configuration end-to-end testing
+      - Multi-org data isolation testing
     status: in-progress
 
   - id: Q2-2026
     label: Q2 2026
     themes:
+      - Reserve production domain and configure DNS/TLS
+      - Production environment setup (Railway)
+      - Authorization enforcement end-to-end testing
+      - Seed production with test org data and smoke test
+      - Production launch
       - External AuthZ REST API
       - GitHub spec sync integration
       - Usage analytics foundation

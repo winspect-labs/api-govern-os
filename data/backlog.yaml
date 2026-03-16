@@ -116,3 +116,231 @@ items:
     links:
       - label: Spec
         url: /features/subscription-authz
+
+  - id: bl-008
+    title: UI completeness audit and polish
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 9
+      ease: 7
+    description: Audit all UI screens for unfinished elements — loading states, empty states, error handling, form validation, disabled/broken buttons. Fix before launch.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-009
+    title: Settings and configuration end-to-end testing
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: Verify all settings flows work from the UI — API keys, org settings, team management, user invites, subscription approval. No silent failures.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-010
+    title: Reserve production domain and configure DNS/TLS
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 8
+    description: Reserve production domain (e.g. app.winspect.io), configure DNS, provision TLS certificate, update CORS and OAuth callback URLs, test end-to-end.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-011
+    title: Multi-org data isolation testing
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 8
+      ease: 6
+    description: Test with multiple independent organizations and users. Verify ABAC org isolation — users cannot see or act on resources from other orgs. Include cross-org API access, subscription requests, and team membership attempts.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-012
+    title: Authorization enforcement end-to-end testing
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 8
+      ease: 5
+    description: Test the full authorization flow — subscription request, approval, permission assignment, ABAC policy evaluation. Verify VIEW/MANAGE/ADMIN levels enforced correctly. Test denied cases.
+    goal_ids:
+      - production-launch
+      - subscription-authz
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-013
+    title: Production environment setup (Railway / infra)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: Provision production Railway services, set all required env vars (Clerk prod keys, DB, CORS, domain), verify health endpoints, set up error monitoring.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-014
+    title: Seed production with test org data and smoke test
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: Create at least two test organizations with real data, run through core flows (register API, invite user, subscribe, approve, check permissions) against the production domain before opening to users.
+    goal_ids:
+      - production-launch
+    feature_id: production-launch
+    links:
+      - label: Spec
+        url: /features/production-launch
+
+  - id: bl-015
+    title: Auto-trigger notifications on API spec change
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 9
+      ease: 7
+    description: When an API spec is updated and the spec content has changed, automatically dispatch notifications to all active subscribers. Wire into ApiRegistryServiceImpl.updateApi() — compare spec hash, call NotificationService.notifySubscribers() with changelog message if provided.
+    goal_ids:
+      - production-launch
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-016
+    title: Email delivery for notifications (SMTP)
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: Implement EmailNotificationService using spring-boot-starter-mail. Send HTML emails to user.contactInfo.emailAddress when notification preferences include EMAIL. Required env vars — SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM.
+    goal_ids:
+      - production-launch
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-017
+    title: Slack delivery via Incoming Webhook
+    status: planned
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 8
+    description: Implement SlackNotificationService using Slack Incoming Webhooks (no SDK needed). Requires extending ContactInfo schema to add slackWebhookUrl field (new DB migration). Send formatted markdown message with API name, version, changelog summary, and link.
+    goal_ids:
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-018
+    title: Notification preferences settings UI
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 7
+    description: Add a Notifications section to Settings. Users select channels (UI, Email, Slack checkboxes), enter Slack Webhook URL if Slack selected. Calls updateNotificationPreferences() and saves slackWebhookUrl to ContactInfo. Requires adding updateNotificationPreferences to notificationsApiClient.ts.
+    goal_ids:
+      - production-launch
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-019
+    title: Changelog form on API spec update
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 9
+      ease: 8
+    description: Add a collapsible Changelog section to the API edit dialog — breaking change checkbox, severity selector (MAJOR/MINOR/PATCH), title, description, optional migration guide. Fields sent as changelogTitle, changelogMessage, isBreakingChange, severity in the multipart update request.
+    goal_ids:
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-020
+    title: Extend ChangelogEntry schema (breaking change, severity, migration guide)
+    status: planned
+    priority: P1
+    ice:
+      impact: 6
+      confidence: 9
+      ease: 8
+    description: Add isBreakingChange (boolean), severity (MAJOR/MINOR/PATCH enum), migrationGuide (text) to ChangelogEntry entity and OpenAPI spec. Requires Flyway migration and frontend type regeneration.
+    goal_ids:
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications
+
+  - id: bl-021
+    title: Extend ContactInfo schema for Slack webhook URL
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 9
+      ease: 8
+    description: Add slackWebhookUrl field to ContactInfo entity and OpenAPI spec. The existing slackChannel field stores a display name only; delivery requires a webhook URL. Requires Flyway migration and frontend type regeneration.
+    goal_ids:
+      - core-platform
+    feature_id: api-change-notifications
+    links:
+      - label: Spec
+        url: /features/api-change-notifications

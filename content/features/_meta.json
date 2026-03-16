@@ -3,5 +3,7 @@
   "api-catalog": "API Catalog",
   "k8s-discovery": "K8s Auto-Discovery",
   "rag-search": "RAG Semantic Search",
-  "subscription-authz": "Subscription AuthZ"
+  "subscription-authz": "Subscription AuthZ",
+  "production-launch": "Production Launch",
+  "api-change-notifications": "API Change Notifications"
 }

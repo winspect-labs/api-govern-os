@@ -1,0 +1,366 @@
+---
+title: API Change Notifications & Changelogs
+category: feature
+status: in-progress
+priority: P0
+owners: ["api-management-ui", "platform-backend-service"]
+last_updated: 2026-03-01
+tags: ["notifications", "changelog", "release-notes", "slack", "email", "subscribers"]
+---
+
+# API Change Notifications & Changelogs
+
+When an API spec changes, every subscriber should know — via the channel they prefer. API owners should be able to attach a changelog or release note to an update, and that message should travel with the notification.
+
+## Status
+
+<StatusBadge status="in-progress" /> <PriorityBadge priority="P0" />
+
+**Completion: ~25%** — The data model, notification preferences schema, changelog schema, and UI notification display exist. Auto-trigger on spec change, email delivery, and Slack delivery are not yet implemented.
+
+---
+
+## What Already Exists
+
+Before building, understand what's already in the codebase.
+
+### Notification data model (in `lib/api/types.ts`)
+
+```typescript
+// A notification record stored in the DB and shown in the UI bell
+type Notification = {
+  id?: string;
+  userId?: string;
+  message?: string;
+  read?: boolean;
+  createdAt?: string;
+  resourceType?: string;
+  contextId?: string;          // usually apiId
+  notificationName?: string;
+};
+
+// Request to send a notification to all API subscribers
+type NotificationRequest = {
+  apiId?: string;
+  message?: string;
+  eventType?: "API_UPDATE" | "SUBSCRIPTION_APPROVED" | "SYSTEM_ANNOUNCEMENT";
+};
+
+// Per-user channel preferences
+type NotificationPreferences = {
+  userId?: string;
+  preferences?: ("UI" | "EMAIL" | "SLACK")[];
+};
+
+// User contact details (stored on the User entity)
+type ContactInfo = {
+  emailAddress?: string;
+  slackChannel?: string;       // currently stores channel name — see gap below
+};
+```
+
+### Changelog data model (in `lib/api/types.ts`)
+
+```typescript
+type ChangelogEntry = {
+  title?: string;
+  changeDescription?: string;
+  timestamp?: string;
+  modifiedBy?: string;
+  version?: string;
+};
+
+type ChangelogResponse = {
+  apiId?: string;
+  changelogEntries?: ChangelogEntry[];
+};
+```
+
+### Existing endpoints
+
+| Method | Path | Status |
+|--------|------|--------|
+| `POST` | `/notifications` | Exists — manually send notification to API subscribers |
+| `GET` | `/notifications/users/{userId}` | Exists — fetch all notifications for a user |
+| `GET` | `/notifications/unread` | Exists — fetch unread for current user |
+| `POST` | `/notifications/mark-read/{id}` | Exists |
+| `GET/PUT` | `/notifications/preferences` | Exists — read/write channel preferences |
+| `GET` | `/apis/{apiId}/changelog` | Exists — fetch changelog for an API |
+
+### Existing frontend clients
+
+- `services/notificationsApiClient.ts` — `getUserNotifications`, `getUnreadUserNotifications`, `markNotificationAsRead`, `getNotificationPreferences`
+- `services/apiManagementClient.ts` — `getApiChangelog()`, `changelogTitle` + `changelogMessage` fields on API update
+
+### What UI notification display exists
+
+The in-app notification bell works: unread count is fetched, notifications are listed, marking as read works.
+
+---
+
+## What's Missing
+
+The system is incomplete in three distinct areas.
+
+### 1. Auto-trigger — spec change does not dispatch notifications
+
+Currently, `POST /notifications` is a **manual** endpoint. Nothing in `ApiRegistryServiceImpl.updateApi()` automatically fires a notification when a spec is updated.
+
+**What needs to happen:** When `updateApi` is called and the `openapiSpec` field changes (compare SHA-256 or a diff), the backend should automatically call `NotificationService.notify(apiId, "API_UPDATE", changelogMessage)` before returning.
+
+The `sendNotification` function is not exposed in `notificationsApiClient.ts` — it needs to be added.
+
+### 2. External delivery — EMAIL and SLACK are not sent
+
+The `NotificationPreferences.preferences` field stores `["UI", "EMAIL", "SLACK"]` but:
+
+- **UI** delivery works (stored in `notifications` table, fetched via API)
+- **EMAIL** delivery is not implemented — no email sending service wired in `platform-backend-service`
+- **SLACK** delivery is not implemented — no Slack webhook integration exists
+
+Additionally, `ContactInfo.slackChannel` currently stores a channel **name** (e.g. `#api-updates`). To send Slack messages, you need either:
+- A **Slack Incoming Webhook URL** per channel (simplest, no bot required)
+- A **Slack Bot Token** with `chat:write` scope
+
+The schema needs to be extended to distinguish between `slackWebhookUrl` and `slackChannel`.
+
+### 3. Changelog is not linked to notifications
+
+When an API owner updates a spec and provides a `changelogTitle` + `changelogMessage`, that information is stored in `ChangelogEntry` but is **not included in the notification dispatched to subscribers**. Subscribers see a generic "API updated" message with no content.
+
+The notification `message` field should include the changelog summary so subscribers understand what changed without navigating to the API page.
+
+---
+
+## Target Behaviour
+
+### On API spec update
+
+1. API owner publishes spec change via the UI (with optional changelog message)
+2. Backend detects spec diff (new `openapiSpec` != stored `openapiSpec`)
+3. Backend fetches all active subscribers of the API
+4. Backend calls `NotificationService.notify(subscribers, apiId, changelogMessage)` asynchronously
+5. For each subscriber, based on their `NotificationPreferences`:
+   - **UI**: Create `Notification` record in DB → appears in notification bell
+   - **EMAIL**: Send email to `user.contactInfo.emailAddress` with changelog summary
+   - **SLACK**: POST to `user.contactInfo.slackWebhookUrl` with formatted message
+
+### Slack message format
+
+```
+*[API_NAME] has been updated*
+Version: 2.1.0 → 2.2.0
+Team: Payments Team
+
+> Added `POST /v1/refunds` endpoint
+> Deprecated `DELETE /v1/charges/{id}` — use /v1/refunds instead
+
+View full changelog → https://app.winspect.io/apis/abc123
+```
+
+### Email format
+
+Subject: `[Winspect] {API_NAME} has been updated`
+
+Body: HTML email with the changelog entry, change summary, link to the API detail page.
+
+---
+
+## Data Model Changes Needed
+
+### Extend `ChangelogEntry` (breaking change flag, severity)
+
+```typescript
+// Extended ChangelogEntry
+type ChangelogEntry = {
+  title?: string;
+  changeDescription?: string;
+  timestamp?: string;
+  modifiedBy?: string;
+  version?: string;
+  // New fields:
+  isBreakingChange?: boolean;
+  severity?: "MAJOR" | "MINOR" | "PATCH";
+  migrationGuide?: string;     // optional markdown
+};
+```
+
+### Extend `ContactInfo` (Slack webhook vs. channel name)
+
+```typescript
+// Extended ContactInfo
+type ContactInfo = {
+  emailAddress?: string;
+  slackChannel?: string;        // display only (e.g. #api-updates)
+  slackWebhookUrl?: string;     // NEW — Incoming Webhook URL for delivery
+};
+```
+
+Backend migration: `V{n}__add_slack_webhook_to_contact_info.sql`
+
+### New: `NotificationChannel` config per API (optional, org-level override)
+
+API owners may want to specify a team-level notification channel that subscribers don't need to configure individually. This is a v2 concern — do not implement in MVP.
+
+---
+
+## Backend Implementation
+
+### `NotificationService` (extend existing)
+
+```java
+// platform-backend-core
+public interface NotificationService {
+    // Existing: create UI notification record
+    void notifySubscribers(UUID apiId, String eventType, String message);
+
+    // New: dispatch to external channels
+    void dispatchToExternalChannels(List<User> subscribers, String subject, String body);
+}
+```
+
+### `EmailNotificationService` (new)
+
+```java
+// Implement using JavaMailSender (Spring Boot Mail)
+// Config: spring.mail.host, spring.mail.port, SMTP credentials
+// Env vars: SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM
+
+public class EmailNotificationServiceImpl implements EmailNotificationService {
+    public void send(String to, String subject, String htmlBody) { ... }
+}
+```
+
+Dependencies to add to `pom.xml`:
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-mail</artifactId>
+</dependency>
+```
+
+### `SlackNotificationService` (new)
+
+```java
+// Simple outbound webhook using RestTemplate or WebClient
+// No Slack SDK required for Incoming Webhooks
+
+public class SlackNotificationServiceImpl implements SlackNotificationService {
+    public void send(String webhookUrl, String markdownMessage) {
+        // POST {"text": markdownMessage} to webhookUrl
+    }
+}
+```
+
+No additional dependencies needed — use `RestTemplate` or `WebClient`.
+
+### Wire into `ApiRegistryServiceImpl`
+
+```java
+// In updateApi(), after saving the updated API:
+if (specHasChanged(existingSpec, newSpec)) {
+    String changelogSummary = request.getChangelogMessage();
+    notificationService.notifySubscribers(apiId, "API_UPDATE", changelogSummary);
+}
+```
+
+The comparison can use SHA-256 hash of the spec string rather than a full diff.
+
+---
+
+## Frontend Implementation
+
+### New: `sendNotification` in `notificationsApiClient.ts`
+
+```typescript
+// Add to services/notificationsApiClient.ts
+export async function sendApiUpdateNotification(
+  authToken: string,
+  apiId: string,
+  message: string
+): Promise<void> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api-management/notifications`,
+    {
+      method: "POST",
+      headers: getHeaders(authToken, "POST"),
+      body: JSON.stringify({ apiId, message, eventType: "API_UPDATE" }),
+    }
+  );
+  if (!response.ok) throw new Error("Failed to send notification");
+}
+```
+
+### New: `updateNotificationPreferences` in `notificationsApiClient.ts`
+
+```typescript
+export async function updateNotificationPreferences(
+  authToken: string,
+  preferences: ("UI" | "EMAIL" | "SLACK")[]
+): Promise<void> {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}/api-management/notifications/preferences`,
+    {
+      method: "PUT",
+      headers: getHeaders(authToken, "PUT"),
+      body: JSON.stringify({ preferences }),
+    }
+  );
+  if (!response.ok) throw new Error("Failed to update preferences");
+}
+```
+
+### Notification preferences UI
+
+Location: **Settings → Notifications** (new tab or section)
+
+User can:
+1. Select channels: checkboxes for UI, Email, Slack
+2. Enter Slack Webhook URL (if Slack selected)
+3. Verify email (pre-filled from Clerk, read-only unless editable in profile)
+
+### Changelog entry UI on spec update
+
+When an API owner publishes a spec change via the Edit API dialog, show a collapsible "Changelog" section:
+
+```
+✅ Breaking change?  [ ] Yes  [x] No
+Severity:           [MINOR ▾]
+Title:              e.g. "Added refunds endpoint"
+Description:        e.g. "Added POST /v1/refunds..."
+Migration guide:    (optional markdown, shown if breaking)
+```
+
+On save: `changelogTitle` + `changelogMessage` + `isBreakingChange` + `severity` sent with the spec update form.
+
+---
+
+## Backlog Items
+
+- **bl-015**: Auto-trigger notifications on spec change (backend wiring)
+- **bl-016**: Email delivery via SMTP (`EmailNotificationService`)
+- **bl-017**: Slack delivery via Incoming Webhook (`SlackNotificationService`)
+- **bl-018**: Notification preferences settings UI (channel selection, webhook config)
+- **bl-019**: Changelog UI on spec update (breaking change flag, severity, migration guide)
+- **bl-020**: Extend `ChangelogEntry` schema (breaking change, severity, migration guide)
+- **bl-021**: Extend `ContactInfo` schema (Slack webhook URL vs. channel name)
+
+MVP for production launch: bl-015 (auto-trigger) + bl-016 (email) + bl-018 (preferences UI).
+Slack (bl-017) can follow shortly after.
+
+---
+
+## What NOT to Build (Yet)
+
+- **Per-API notification channel overrides** — API owners setting a team-wide Slack channel for their API's subscribers. V2.
+- **Digest notifications** — "Here are all APIs that changed this week". V2.
+- **Webhook delivery to external systems** — consumers registering their own webhook endpoints. V3.
+- **Diff view in notification** — showing which endpoints were added/removed/changed. Complex; V2.
+- **Push notifications / mobile** — Not in scope.
+
+---
+
+## Repositories
+
+- `platform-backend-service` — `NotificationService`, `EmailNotificationService`, `SlackNotificationService`, wiring in `ApiRegistryServiceImpl`, DB migration for `ContactInfo`
+- `api-management-ui` — Notification preferences settings UI, changelog form on spec update, `notificationsApiClient.ts` additions

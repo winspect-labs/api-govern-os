@@ -5,46 +5,248 @@ status: in-progress
 priority: P0
 owners: ["platform-backend-service", "winspect-api-discovery-agent", "api-management-ui"]
 last_updated: 2026-03-01
-tags: ["discovery", "kubernetes", "runtime-records", "bulk-import"]
+tags: ["discovery", "kubernetes", "runtime-records", "spec-records", "bulk-import"]
 ---
 
 # K8s API Auto-Discovery
 
-Discover APIs from Kubernetes services. Eliminate manual API registration by scanning customer clusters and registering runtime records.
+Eliminate manual API registration by discovering APIs from Kubernetes services. The discovery agent scans customer clusters, probes OpenAPI endpoints, and registers runtime records that users can map to their API catalog.
 
 ## Status
 
 <StatusBadge status="in-progress" /> <PriorityBadge priority="P0" />
 
-## Description
+**Completion: ~40%** — Backend and agent deployed. Bulk import UI and manual mapping dialog are in progress.
 
-The discovery system uses a **dual model**:
+---
 
-- **Spec records** — Required for every API. Source: manual upload, GitHub (future), or runtime-detected (bulk import)
-- **Runtime records** — Optional. Source: K8s discovery agent. Start orphaned (`api_id = NULL`) until manual mapping or bulk import
+## The Dual Discovery Model
 
-### Discovery Agent
+This is the central design decision for the feature. Every API entity can have two distinct records:
 
-The [winspect-api-discovery-agent](https://github.com/winspect-labs/winspect-api-discovery-agent) is a lightweight, stateless pod deployed in customer K8s clusters:
+```
+Api (1) ──── (1) SpecRecord     ← REQUIRED. The intended API (design-time)
+Api (1) ──── (0..1) RuntimeRecord  ← OPTIONAL. The observed API (runtime)
+```
 
-1. **Scan** — Lists services in configured namespaces
-2. **Probe** — Tries well-known OpenAPI endpoints (`/v3/api-docs`, `/openapi.json`, `/openapi.yaml`, `/swagger.json`)
-3. **Register** — Creates runtime records in the central Winspect API via `POST /discovery/runtime-records`
+| | SpecRecord | RuntimeRecord |
+|---|---|---|
+| **Source** | Manual upload, GitHub, or bulk import from K8s | K8s discovery agent |
+| **Required?** | Yes — every API must have one | No — can be absent |
+| **Used for** | Operations parsing, RAG indexing, mock server | Service endpoint info, cluster location |
+| **Authoritative?** | Yes — drives catalog and AI features | No — observational only |
 
-Helm-deployed; configurable scan interval, namespaces, timeouts.
+See [PDR-001](/decisions/PDR-001-spec-record-primary) and [PDR-002](/decisions/PDR-002-dual-discovery-model) for the design rationale.
 
-### User Flows
+---
 
-- **Bulk import** — When system is empty, create APIs from orphaned runtime records in one action
-- **Manual mapping** — Link an orphaned runtime record to an existing API
-- **Duplicate detection** — Metadata hash (SHA-256 of service_name:namespace:api_name:api_version) prevents duplicate runtime records
+## Data Model
+
+### RuntimeRecordResponse (frontend type)
+
+```typescript
+type RuntimeRecordResponse = {
+  id: string;                 // UUID
+  apiId?: string;             // null = orphaned (not yet linked to an API)
+  k8sServiceName: string;
+  k8sNamespace: string;
+  k8sClusterId: string;
+  metadataHash: string;       // SHA-256 fingerprint (see below)
+  status: string;             // ACTIVE, INACTIVE, ORPHANED
+};
+```
+
+### SpecRecordEntity (backend)
+
+```java
+// Key fields on SpecRecordEntity
+UUID id
+UUID apiId              // always set — required
+String openApiSpec      // raw OpenAPI spec (JSON or YAML string)
+String specSourceType   // MANUAL_UPLOAD, GITHUB, BULK_IMPORT
+String githubRepo       // optional
+String gitSha           // V49 migration — for GitHub-sourced specs
+```
+
+### RuntimeRecordEntity (backend)
+
+```java
+UUID id
+UUID apiId              // FK to Api — null means orphaned
+String k8sServiceName
+String k8sNamespace
+String k8sClusterId
+String metadataHash     // SHA-256 duplicate prevention key
+RuntimeRecordStatus status  // ACTIVE, INACTIVE, ORPHANED
+```
+
+---
+
+## Metadata Hash (Duplicate Detection)
+
+The hash is a SHA-256 fingerprint of the identifying fields of a runtime record:
+
+```java
+String hash = DigestUtils.sha256Hex(
+    k8sServiceName + ":" + k8sNamespace + ":" + apiName + ":" + apiVersion
+);
+```
+
+When a new runtime record arrives from the discovery agent:
+1. Compute the hash
+2. Check if a record with that hash already exists
+3. If yes → reject (duplicate), return the existing record ID
+4. If no → create the record
+
+The hash is also used to auto-link runtime records to existing catalog APIs on bulk import. If an existing API's name and version match the hash, the `apiId` is set automatically.
+
+---
+
+## Discovery Agent
+
+`winspect-api-discovery-agent` is a lightweight Spring Boot pod deployed in customer Kubernetes clusters via Helm.
+
+### Discovery loop
+
+```
+1. List services in configured namespaces
+2. For each service:
+   a. Probe well-known OpenAPI paths:
+      - /v3/api-docs
+      - /openapi.json
+      - /openapi.yaml
+      - /swagger.json
+   b. If spec found → extract name, version, paths
+   c. Compute metadata hash
+   d. POST to central Winspect API: POST /discovery/runtime-records
+3. Sleep for configured scan interval
+4. Repeat
+```
+
+### Deployment (Helm)
+
+```yaml
+# values.yaml (key settings)
+winspect:
+  apiBaseUrl: https://api.winspect.io    # Central Winspect API
+  apiKey: <org-api-key>                  # Org-level API key for authentication
+  scanIntervalSeconds: 300               # How often to scan
+  namespaces: ["default", "production"]  # Which namespaces to scan
+  clusterId: "prod-cluster-1"            # Unique identifier for this cluster
+```
+
+### Registration endpoint
+
+```
+POST /api-management/discovery/runtime-records
+Content-Type: application/json
+X-API-Key: <org-api-key>
+
+{
+  "k8sServiceName": "cart-service",
+  "k8sNamespace": "default",
+  "k8sClusterId": "prod-cluster-1",
+  "openApiSpec": "<spec content>",
+  "apiName": "Cart Service API",
+  "apiVersion": "1.0.0"
+}
+```
+
+---
+
+## User Flows
+
+### Bulk Import
+
+When an organization has no APIs yet, all orphaned runtime records can be imported at once. Each orphaned record creates a new API + SpecRecord in the catalog.
+
+**UI location**: Discovery dashboard → "Import All" button (shown when catalog is empty)
+
+**Frontend client**: `services/discoveryClient.ts`
+```typescript
+// Bulk import all orphaned runtime records
+await bulkImportRuntimeRecords(authToken, orgId);
+```
+
+**Backend**: `POST /api-management/discovery/runtime-records/bulk-import`
+
+**Flow**:
+1. Find all orphaned runtime records for the org (where `apiId IS NULL`)
+2. For each: create `Api` + `SpecRecord` (spec from the discovered OpenAPI spec)
+3. Set `apiId` on the runtime record
+4. Return created API IDs
+
+### Manual Mapping
+
+Link an individual orphaned runtime record to an existing API.
+
+**UI location**: Discovery dashboard → orphaned record → "Map to API" dialog
+
+**Frontend client**: `services/discoveryClient.ts`
+```typescript
+await mapRuntimeRecordToApi(authToken, runtimeRecordId, apiId);
+```
+
+**Backend**: `PATCH /api-management/discovery/runtime-records/{id}/map`
+
+---
+
+## Frontend Service Client
+
+All discovery operations go through `services/discoveryClient.ts`.
+
+Key functions (to implement or extend as needed):
+```typescript
+// Get all runtime records for org (orphaned and mapped)
+getRuntimeRecords(authToken: string, orgId: string): Promise<RuntimeRecordResponse[]>
+
+// Bulk import all orphaned records
+bulkImportRuntimeRecords(authToken: string, orgId: string): Promise<{ createdApis: string[] }>
+
+// Map single orphaned record to an existing API
+mapRuntimeRecordToApi(authToken: string, runtimeRecordId: string, apiId: string): Promise<void>
+
+// Get orphaned records (not yet linked)
+getOrphanedRuntimeRecords(authToken: string, orgId: string): Promise<RuntimeRecordResponse[]>
+```
+
+---
+
+## Backend Endpoints
+
+All under `platform-backend-core` (port 8080), in `k8s_discovery/controller/RuntimeRecordController.java`.
+
+| Method | Path | Operation |
+|--------|------|-----------|
+| `POST` | `/api-management/discovery/runtime-records` | Register runtime record (agent) |
+| `GET` | `/api-management/discovery/runtime-records` | List all runtime records for org |
+| `GET` | `/api-management/discovery/runtime-records/orphaned` | List orphaned records |
+| `POST` | `/api-management/discovery/runtime-records/bulk-import` | Bulk import orphaned → APIs |
+| `PATCH` | `/api-management/discovery/runtime-records/{id}/map` | Map orphaned record to existing API |
+
+---
+
+## Implementation State
+
+| Component | Status |
+|-----------|--------|
+| RuntimeRecord entity + migration | Done |
+| SpecRecord entity + migration | Done |
+| Git SHA field on SpecRecord (V49) | Done |
+| `RuntimeRecordController` — register endpoint | Done |
+| `ApiRegistryServiceImpl` — spec/runtime record linking | Done |
+| `ApiSpecSyncService` — sync logic | Done |
+| Discovery agent — K8s scanner | Done |
+| Discovery agent — Helm chart | Done |
+| Bulk import backend | Done |
+| Manual mapping backend | Done |
+| **Bulk import UI (discovery dashboard)** | **In progress (bl-002)** |
+| **Manual mapping dialog** | **In progress (bl-003)** |
+
+---
 
 ## Repositories
 
-- `platform-backend-service` — Discovery API, runtime/spec record entities, bulk import, manual mapping
-- `winspect-api-discovery-agent` — K8s scanner, Helm chart (client-facing repo)
+- `platform-backend-service` — Discovery API, RuntimeRecord and SpecRecord entities, bulk import, manual mapping, `ApiSpecSyncService`
+- `winspect-api-discovery-agent` — K8s scanner, Helm chart (client-facing; shared with customers for installation)
 - `api-management-ui` — Discovery dashboard, bulk import UI, manual mapping dialog
-
-## Completion
-
-~40% — Backend and agent in place. Bulk import UI and manual mapping dialog in progress.

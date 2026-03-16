@@ -1,0 +1,304 @@
+---
+title: Backend Patterns
+category: architecture
+last_updated: 2026-03-01
+---
+
+# Backend Patterns (`platform-backend-service`)
+
+This page is the canonical reference for the backend service structure, patterns, and constraints. Agents implementing backend features must follow these patterns.
+
+---
+
+## Project Structure
+
+`platform-backend-service` is a multi-module Maven project:
+
+```
+platform-backend-service/
+├── platform-backend-core/          # Main service — port 8080
+│   └── src/main/java/com/platform_backend/
+│       ├── api_management/         # API catalog, subscriptions, ABAC
+│       │   ├── controller/
+│       │   ├── service/
+│       │   ├── persistence/
+│       │   │   ├── entities/
+│       │   │   └── repository/
+│       │   └── model/              # DTOs
+│       ├── k8s_discovery/          # K8s discovery, runtime records
+│       │   ├── controller/
+│       │   ├── service/
+│       │   └── persistence/
+│       └── commons/                # Base controller, exception handler
+├── platform-ai-core/               # RAG/AI service — port 9090
+│   └── src/main/java/com/platform_ai/
+│       └── api_discovery/          # Indexing, search, chunking
+├── openapi-spec/
+│   └── platform-backend/
+│       ├── api-spec.yaml           # Main OpenAPI spec (generates frontend types)
+│       └── discovery-api-spec.yaml # Discovery endpoints spec
+└── openapi-mockgen/                # Mock generation utilities
+```
+
+---
+
+## Technology
+
+| Layer | Choice | Version |
+|-------|--------|---------|
+| Framework | Spring Boot | 3.4.1 (core), 3.5.7 (ai) |
+| Language | Java | 17 (core), 21 (ai) |
+| Database | PostgreSQL | Latest |
+| Schema migration | Flyway | Incremental versioned migrations |
+| Auth | Clerk JWT | `ClerkJwtAuthenticationFilter` |
+| AI | Spring AI | `spring-ai-pgvector-store`, `spring-ai-openai` |
+| Vector DB | pgvector extension | HNSW index, 1536 dimensions |
+| API spec | OpenAPI 3.0 | Code-generated from spec |
+
+---
+
+## Service Layer Pattern
+
+Every domain follows the same layered structure:
+
+```
+Controller → Service interface → ServiceImpl → Repository → Entity
+```
+
+- **Controller**: Validates auth, extracts headers, delegates to service
+- **Service interface**: Business contract
+- **ServiceImpl**: Business logic, transaction boundaries
+- **Repository**: Spring Data JPA repository
+- **Entity**: JPA entity with Flyway-managed schema
+
+Agents must not put business logic in controllers and must not put database queries in services.
+
+---
+
+## Database Schemas
+
+Two isolated PostgreSQL schemas:
+
+| Schema | Owner | Contents |
+|--------|-------|---------|
+| `platform_backend` | `platform-backend-core` | APIs, teams, orgs, subscriptions, permissions, runtime records, spec records |
+| `platform_ai` | `platform-ai-core` | Vector embeddings, indexing status |
+
+Flyway migrations are prefixed by schema:
+- `platform-backend-core/src/main/resources/db/migration/V{n}__description.sql`
+- `platform-ai-core/src/main/resources/db/migration/V{n}__description.sql`
+
+Each new column, table, or index **must** have a corresponding migration file. Never alter the schema without one.
+
+---
+
+## Authentication
+
+The backend uses Clerk JWTs. The `ClerkJwtAuthenticationFilter` validates every request except:
+- Mock server endpoints (`/v2/mock-server/**`) — handled by `MockServerApiKeyFilter` using `X-Mock-API-Key`
+- Health endpoints (`/actuator/health`)
+
+Configurable skip paths via:
+```yaml
+security:
+  skip-jwt-auth-paths: /v2/mock-server/,/api/webhooks/,/health-check/
+```
+
+---
+
+## ABAC v2 Policy Engine
+
+The ABAC (Attribute-Based Access Control) engine evaluates every resource access request in a strict hierarchical order. All steps are evaluated in order; the first match short-circuits the rest.
+
+```
+1. Super Admin Check       → GRANT immediately if user has SUPER_ADMIN role
+2. Org Isolation Check     → DENY if resource org ≠ user org (cross-org blocked)
+3. Org Admin Override      → GRANT if user has ORG_ADMIN for this org (skip steps 4–5)
+4. Resource-Specific Check → DENY if resource team ≠ user team and no subscription
+5. Permission Level Check  → DENY if user permission level < required level
+```
+
+### Permission levels (hierarchical)
+
+```
+VIEW < MANAGE < ADMIN
+```
+
+Each level inherits lower-level permissions. Checking `MANAGE` grants `VIEW` as well.
+
+### Key implementation points
+
+- Every API resource access check calls the ABAC evaluator
+- Subscriptions grant a specific permission level to an identity on an API
+- Team isolation is enforced at step 4 — non-team members must have an approved subscription
+- Org isolation at step 2 is unconditional — there is no override for cross-org access except SUPER_ADMIN
+
+### Permission levels in use
+
+| Level | Can do |
+|-------|--------|
+| `VIEW` | Read API details, spec, operations |
+| `MANAGE` | Update API details, manage mock server, manage spec |
+| `ADMIN` | Delete API, manage subscriptions, transfer ownership |
+
+---
+
+## Spec and Runtime Record Model
+
+Every API in the catalog has:
+
+- **One SpecRecord** (required) — the design-time API spec. Source: manual upload, or bulk import from runtime record
+- **Zero or one RuntimeRecord** (optional) — the observed runtime service. Source: K8s discovery agent
+
+```
+Api (1) ──── (1) SpecRecord
+Api (1) ──── (0..1) RuntimeRecord
+```
+
+### RuntimeRecord entity
+
+```java
+// Key fields
+UUID id
+UUID apiId                 // null = orphaned
+String k8sServiceName
+String k8sNamespace
+String k8sClusterId
+String metadataHash        // SHA-256(serviceName:namespace:apiName:apiVersion)
+RuntimeRecordStatus status // ACTIVE, INACTIVE, ORPHANED
+```
+
+### Metadata hash (duplicate detection)
+
+```java
+String hash = DigestUtils.sha256Hex(
+    serviceName + ":" + namespace + ":" + apiName + ":" + apiVersion
+);
+```
+
+Duplicate runtime records are rejected using this hash. The hash is also used to auto-match newly discovered records to existing APIs.
+
+### SpecRecord entity
+
+```java
+UUID id
+UUID apiId                 // always set
+String openApiSpec         // raw OpenAPI spec content
+String specSourceType      // MANUAL_UPLOAD, GITHUB, BULK_IMPORT
+String githubRepo          // optional — for GitHub-sourced specs
+String gitSha              // optional — for GitHub-sourced specs (V49 migration)
+```
+
+---
+
+## RAG Architecture
+
+The RAG pipeline spans two services:
+
+```
+api-management-ui
+    ↓ POST /api-management/ai/search
+platform-backend-core (port 8080)
+    ↓ proxy  
+platform-ai-core (port 9090)
+    ↓ pgvector similarity search
+PostgreSQL (platform_ai schema)
+```
+
+### Indexing (async, mandatory)
+
+When an API is registered or updated, `ApiRegistryServiceImpl` publishes an event. `platform-ai-core` consumes it asynchronously and runs the indexing pipeline:
+
+1. Parse OpenAPI spec
+2. Generate L1 chunk (API metadata — name, version, description, team, tags)
+3. Generate L2 chunks (one per endpoint — method, path, summary, params, responses)
+4. Embed each chunk via OpenAI `text-embedding-3-small` (1536 dimensions)
+5. Store in `spring_ai_vector_store` table (managed by Spring AI)
+6. Update `api_indexing_status` record
+
+Indexing is **never synchronous** — it must not block the API registration response.
+
+### Search
+
+```java
+// platform-ai-core: ApiDiscoveryServiceImpl
+List<Document> results = vectorStore.similaritySearch(
+    SearchRequest.builder()
+        .query(queryEmbedding)
+        .topK(request.getMaxResults())
+        .build()
+);
+```
+
+### Chunking strategy (MVP: L1 + L2 only)
+
+| Level | Content | Notes |
+|-------|---------|-------|
+| L1 | API-level metadata | One chunk per API |
+| L2 | Endpoint-level (method + path + summary + params) | One chunk per operation |
+| L3 | Schema definitions | Deferred to v2 |
+| L4 | Request/response examples | Deferred to v2 |
+
+### Configuration
+
+```yaml
+# platform-ai-core application.yaml
+spring:
+  ai:
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536
+        m: 16
+        ef-construction: 64
+    openai:
+      embedding:
+        options:
+          model: text-embedding-3-small
+          dimensions: 1536
+```
+
+---
+
+## OpenAPI Spec Workflow
+
+The backend OpenAPI specs at `openapi-spec/platform-backend/` are the contract between backend and frontend. **Any new endpoint must be added to the spec before or alongside the implementation.** The frontend `lib/api/types.ts` is regenerated from this spec.
+
+Spec files:
+- `api-spec.yaml` — main API management endpoints
+- `discovery-api-spec.yaml` — K8s discovery endpoints
+
+---
+
+## Adding a New Feature (backend checklist)
+
+1. **Update OpenAPI spec** — add paths, schemas, operationIds
+2. **Create Flyway migration** — `V{n}__describe_change.sql`
+3. **Create/update entity** — JPA entity with new fields
+4. **Create/update repository** — Spring Data JPA
+5. **Create/update service interface and impl** — business logic
+6. **Create/update controller** — auth, delegation, response mapping
+7. **Regenerate frontend types** — run openapi-typescript against updated spec
+8. **Update `services/` in frontend** — new client functions using generated types
+
+---
+
+## Environment Variables (production)
+
+```bash
+# Database
+DB_NAME=postgres
+DB_USERNAME=...
+DB_PASSWORD=...
+
+# Clerk auth
+CLERK_SECRET_KEY=...
+CLERK_PUBLISHABLE_KEY=...
+
+# OpenAI (platform-ai-core)
+OPENAI_API_KEY=sk-...
+
+# Mock server paths to skip JWT
+SECURITY_SKIP_JWT_AUTH_PATHS=/v2/mock-server/,/health-check/
+```

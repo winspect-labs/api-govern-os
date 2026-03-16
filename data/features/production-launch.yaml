@@ -1,0 +1,16 @@
+features:
+  - id: production-launch
+    name: Production Launch
+    status: in-progress
+    priority: P0
+    completion: 10
+    repos:
+      - api-management-ui
+      - platform-backend-service
+    description: Polish the platform end-to-end for public production — UI completeness, settings/config flows, production domain, multi-org isolation testing, and authorization enforced end-to-end
+    goal_ids:
+      - production-launch
+      - subscription-authz
+    links:
+      - label: Spec
+        url: /features/production-launch

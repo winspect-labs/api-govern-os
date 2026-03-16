@@ -5,41 +5,266 @@ status: in-progress
 priority: P1
 owners: ["platform-backend-service", "api-management-ui"]
 last_updated: 2026-03-01
-tags: ["rag", "semantic-search", "embeddings", "pgvector"]
+tags: ["rag", "semantic-search", "embeddings", "pgvector", "spring-ai"]
 ---
 
 # RAG Semantic Search
 
-Natural language API discovery via vector embeddings. Find APIs by describing what they do, not by keyword matching.
+Natural language API discovery via vector embeddings. Find APIs by describing what they do — not by keyword matching against API names.
 
 ## Status
 
 <StatusBadge status="in-progress" /> <PriorityBadge priority="P1" />
 
-## Description
+**Completion: ~70%** — Search pipeline and async indexing in place. Accuracy tuning and frontend polish in progress.
 
-The RAG (Retrieval-Augmented Generation) system enables semantic search:
+---
 
-- **Vector store** — PostgreSQL with pgvector extension, HNSW index
-- **Embeddings** — OpenAI `text-embedding-3-small` (1536 dimensions) in production; Ollama for local dev
-- **Chunking** — L1: API metadata (name, version, description, team, tags); L2: endpoint chunks (method, path, summary, params, responses)
-- **Architecture** — `api-management-ui` → `platform-backend-service` (proxy) → `platform-ai-core` (port 9090). RAG data lives in isolated `platform_ai` schema.
+## What It Does
 
-### MVP Scope
+A user types "find me APIs that process payments" or "which APIs handle user authentication" and gets back structured API cards — name, version, description, team, endpoints — ranked by relevance.
 
-Semantic search returning structured API cards. Conversational chat deferred to v2.
+MVP is **search only** (structured results). Conversational chat (LLM generation) is deferred to v2.
 
-### Success Criteria
+---
 
-- Over 80% accuracy (top 5 results contain correct API)
-- Under 200ms search latency
-- Handles 1000+ APIs
+## Architecture
+
+The RAG pipeline spans two services behind a proxy pattern:
+
+```
+api-management-ui
+    │  POST /api-management/ai/search
+    ▼
+platform-backend-core (port 8080)
+    │  proxy (no business logic)
+    ▼
+platform-ai-core (port 9090)
+    │  generate query embedding via OpenAI
+    │  run similarity search in pgvector
+    ▼
+PostgreSQL — platform_ai schema
+    └── spring_ai_vector_store (Spring AI managed)
+    └── api_indexing_status
+```
+
+The frontend never calls `platform-ai-core` directly. It always goes through the proxy at `platform-backend-core`.
+
+---
+
+## Frontend Service Client
+
+All RAG operations go through `services/ragApiClient.ts`.
+
+```typescript
+// Search
+const results = await searchApis(authToken, {
+  query: "payment processing APIs",
+  maxResults: 10,
+  orgId: organization.id
+});
+
+// Check indexing status for an API
+const status = await getIndexingStatus(authToken, apiId);
+```
+
+Types come from `lib/api/types.ts`:
+
+```typescript
+type SearchRequest = {
+  query: string;
+  maxResults?: number;
+  orgId: string;
+};
+
+type SearchResult = {
+  apiId: string;
+  apiName: string;
+  version: string;
+  description?: string;
+  teamName?: string;
+  relevanceScore: number;
+  matchedChunks: ChunkMatch[];
+};
+
+type SearchResponse = {
+  results: SearchResult[];
+  totalFound: number;
+  queryEmbeddingMs: number;
+  searchMs: number;
+};
+
+type IndexingStatus = {
+  apiId: string;
+  status: string;           // PENDING, IN_PROGRESS, COMPLETED, FAILED
+  indexedAt?: string;
+  chunkCount?: number;
+};
+```
+
+---
+
+## Backend Endpoints
+
+### `platform-backend-core` (proxy layer)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api-management/ai/search` | Proxy search request to platform-ai-core |
+| `GET` | `/api-management/ai/index/{apiId}` | Trigger re-indexing for an API |
+| `GET` | `/api-management/ai/status/{apiId}` | Get indexing status for an API |
+
+### `platform-ai-core` (AI service, internal)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `POST` | `/api-discovery/search` | Semantic search (called by proxy) |
+| `POST` | `/api-discovery/index/{apiId}` | Trigger async indexing |
+| `GET` | `/api-discovery/status/{apiId}` | Get indexing status |
+
+---
+
+## Indexing Pipeline
+
+Indexing is **always asynchronous**. It must never block the API registration response.
+
+When an API is created or updated in `ApiRegistryServiceImpl`, an async event triggers `ApiIndexingService` in `platform-ai-core`:
+
+```java
+// platform-ai-core: ApiIndexingServiceImpl
+@Async
+public void indexApi(UUID apiId, String openApiSpec) {
+    // 1. Parse and chunk
+    List<Chunk> chunks = chunkingService.chunkApiSpec(openApiSpec);
+
+    // 2. Convert to Spring AI Documents
+    List<Document> documents = chunks.stream()
+        .map(chunk -> new Document(chunk.getContent(), buildMetadata(chunk, apiId)))
+        .toList();
+
+    // 3. Store in pgvector
+    vectorStore.add(documents);
+
+    // 4. Update indexing status
+    updateIndexingStatus(apiId, Status.COMPLETED);
+}
+```
+
+### Chunking strategy (MVP: L1 + L2)
+
+| Level | Content | Granularity |
+|-------|---------|-------------|
+| **L1** | API metadata — name, version, description, team, tags | One chunk per API |
+| **L2** | Endpoint details — method, path, summary, parameters, responses | One chunk per `Operation` |
+| L3 | Schema definitions | Deferred to v2 |
+| L4 | Request/response examples | Deferred to v2 |
+
+L1 + L2 is sufficient for over 80% accuracy on the top-5 results target. Adding L3/L4 improves schema-level queries (e.g. "APIs that return a User object with an email field").
+
+---
+
+## Vector Store Configuration
+
+```yaml
+# platform-ai-core application.yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST}:5432/${DB_NAME}?currentSchema=platform_ai
+
+  ai:
+    vectorstore:
+      pgvector:
+        index-type: HNSW          # Better query performance than IVFFlat
+        distance-type: COSINE_DISTANCE
+        dimensions: 1536           # OpenAI text-embedding-3-small
+        m: 16
+        ef-construction: 64
+
+    openai:
+      api-key: ${OPENAI_API_KEY}
+      embedding:
+        options:
+          model: text-embedding-3-small
+          dimensions: 1536
+```
+
+HNSW was chosen over IVFFlat from the start — it gives better query-time performance at the cost of slightly more memory, which is the correct tradeoff for user-facing latency. See [research/technology/rag-pgvector](/research/technology/rag-pgvector).
+
+### Database schema (`platform_ai`)
+
+Managed by Flyway in `platform-ai-core`:
+
+```sql
+-- spring_ai_vector_store (Spring AI managed)
+CREATE TABLE IF NOT EXISTS spring_ai_vector_store (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    content TEXT,
+    metadata JSONB,
+    embedding vector(1536)
+);
+
+-- HNSW index for approximate nearest neighbor search
+CREATE INDEX ON spring_ai_vector_store
+    USING hnsw (embedding vector_cosine_ops)
+    WITH (m = 16, ef_construction = 64);
+
+-- api_indexing_status (custom table)
+CREATE TABLE IF NOT EXISTS api_indexing_status (
+    id UUID PRIMARY KEY,
+    api_id UUID NOT NULL,
+    org_id UUID NOT NULL,
+    status VARCHAR(50),
+    chunk_count INT,
+    indexed_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+```
+
+---
+
+## Embedding Model
+
+| Environment | Model | Dimensions | Cost |
+|------------|-------|-----------|------|
+| Production | OpenAI `text-embedding-3-small` | 1536 | ~$5–15/month |
+| Local development | Ollama `nomic-embed-text` | 768 | Free (self-hosted) |
+
+**Note**: Local development with Ollama uses 768 dimensions. The production database expects 1536. The local dev profile must use a separate schema or table to avoid dimension mismatch errors.
+
+---
+
+## RAG vs. Full-Text Search
+
+The RAG approach was chosen over PostgreSQL full-text search (tsvector) for a specific reason: API discovery is a semantic task, not a keyword task.
+
+A user searching for "payment processing" should find an API called `checkout-service` even if neither word appears in the name. Full-text search fails here. Vector similarity succeeds.
+
+The tradeoff is cost (OpenAI API calls for indexing) and latency (embedding generation at query time). Both are acceptable at this scale.
+
+---
+
+## Success Criteria
+
+| Metric | Target | Current |
+|--------|--------|---------|
+| Accuracy (correct API in top 5) | Over 80% | Measuring |
+| Search latency (p95) | Under 200ms | Measuring |
+| Indexing latency | Under 30s async | Met |
+| Scale | 1000+ APIs | Not yet tested |
+
+---
+
+## Key Design Decisions
+
+- **Search-only MVP** — No conversational chat. `ChatRequest`/`ChatResponse` DTOs exist but are not wired. Chat is v2.
+- **Mandatory async indexing** — Indexing never blocks API registration. A pending status is acceptable.
+- **Proxy architecture** — Frontend always calls `platform-backend-core`. Direct calls to `platform-ai-core` are not permitted.
+- **Schema isolation** — `platform_ai` schema is separate from `platform_backend`. The AI service can be scaled, replaced, or reset independently.
+
+---
 
 ## Repositories
 
-- `platform-backend-service` — Proxy controller to platform-ai; platform-ai-core owns RAG data
-- `api-management-ui` — Search UI, types from OpenAPI
-
-## Completion
-
-~70% — Search pipeline and indexing in place. Polish and optimization in progress.
+- `platform-backend-service` — Contains both `platform-backend-core` (proxy controller) and `platform-ai-core` (indexing, search, Spring AI integration)
+- `api-management-ui` — Search UI, types from OpenAPI, `ragApiClient.ts`

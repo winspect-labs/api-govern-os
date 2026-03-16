@@ -1,0 +1,352 @@
+---
+title: Frontend Patterns
+category: architecture
+last_updated: 2026-03-01
+---
+
+# Frontend Patterns (`api-management-ui`)
+
+This page is the canonical reference for how the frontend is structured. Agents implementing UI features must follow these patterns without exception. Deviating from them introduces inconsistency that becomes expensive to fix later.
+
+---
+
+## Stack
+
+| Layer | Choice | Notes |
+|-------|--------|-------|
+| Framework | Next.js 14 App Router | `app/` directory, Server Components where possible |
+| UI | Material UI v5 + Tailwind CSS | MUI for structure, Tailwind for spacing/color overrides |
+| Auth | Clerk | JWT tokens, org context, user session |
+| API types | `openapi-typescript` | Auto-generated from `platform-backend-service` OpenAPI spec |
+| HTTP client | `openapi-fetch` | Typed against `paths` from `lib/api/types.ts` |
+
+---
+
+## Directory Structure
+
+```
+api-management-ui/
+├── app/                    # Next.js App Router pages
+│   ├── apis/               # API catalog pages
+│   ├── teams/              # Team management
+│   ├── subscriptions/      # Subscription management
+│   ├── settings/           # Org settings, API keys
+│   └── discovery/          # K8s discovery dashboard
+├── components/             # Reusable UI components
+├── context/                # React Context providers
+├── hooks/                  # Custom React hooks
+├── lib/
+│   ├── api/
+│   │   └── types.ts        # ← ALL types live here (auto-generated)
+│   └── error/              # Error utilities
+└── services/               # ← ALL API clients live here
+```
+
+---
+
+## The Service Layer (mandatory)
+
+Every API call goes through a function in `services/`. Components never call `fetch` directly.
+
+### Client inventory
+
+| File | Domain |
+|------|--------|
+| `userApiClient.ts` | Users, org upsert, org profile |
+| `apiManagementClient.ts` | APIs, environments, operations |
+| `teamsApiClient.ts` | Teams, team membership |
+| `permissionsApiClient.ts` | Permissions, roles |
+| `notificationsApiClient.ts` | Notifications |
+| `subscriberApiClient.ts` | Subscriber management |
+| `environmentApiClient.ts` | Environments |
+| `settingsClient.ts` | Org settings, API keys |
+| `mockServerAdminClient.ts` | Mock server admin operations |
+| `mockServerPublicClient.ts` | Mock endpoint testing (auth token) |
+| `mockServerApiKeyClient.ts` | Mock endpoint testing (API key auth) |
+| `mockServerLegacyClient.ts` | Legacy mock operations |
+| `ragApiClient.ts` | RAG semantic search, indexing |
+| `discoveryClient.ts` | K8s runtime records, bulk import, manual mapping |
+
+**Do not create new client files** unless the domain is genuinely new. Add functions to existing clients.
+
+### Pattern
+
+```typescript
+// ✅ CORRECT
+import { getApiById } from '@/services/apiManagementClient';
+const api = await getApiById(authToken, apiId);
+
+// ❌ WRONG — direct HTTP call from a component
+const response = await fetch(`/api-management/apis/${apiId}`);
+```
+
+---
+
+## Type System
+
+All types come from `lib/api/types.ts` which is auto-generated via `openapi-typescript` from the backend OpenAPI spec. Never write custom interfaces that duplicate these.
+
+```typescript
+// ✅ CORRECT
+import { components } from '@/lib/api/types';
+type Api = components['schemas']['Api'];
+type MockServer = components['schemas']['MockServer'];
+type RuntimeRecordResponse = components['schemas']['RuntimeRecordResponse'];
+
+// ❌ WRONG
+interface Api { apiId: string; apiName: string; ... }
+```
+
+### Key schemas (agent reference)
+
+```typescript
+// Core API entity
+type Api = {
+  apiId: string;
+  apiName: string;
+  version: string;
+  description?: string;
+  status: string;
+  openapiSpec?: string;
+  operations?: Operation[];
+  teamId?: string;
+  specSourceType?: string;
+  specGithubRepo?: string;
+  githubBlobUrl?: string;
+};
+
+// Operation (endpoint within an API)
+type Operation = {
+  id: string;
+  apiId: string;
+  operationId: string;
+  method: string;
+  path: string;
+};
+
+// Mock server
+type MockServer = {
+  mockServerId: string;
+  apiId: string;
+  mockServerName: string;
+  ownerTeamId: string;
+  isDefault: boolean;
+  apiKey: string;
+  isEnabled: boolean;
+};
+
+// Mock server configuration
+type MockServerConfig = {
+  defaultStrategy: string;
+  validationMode: string;
+  maxLogEntries: number;
+  rateLimitPerMinute: number;
+  maxVariantsPerOperation: number;
+  maxTotalVariants: number;
+};
+
+// Mock response variant (per operation)
+type MockResponseVariant = {
+  variantId: string;
+  operationId: string;
+  responseName: string;
+  statusCode: number;
+  responseBody: string;
+  headers: Record<string, string>;
+  isDefault: boolean;
+};
+
+// K8s runtime discovery record
+type RuntimeRecordResponse = {
+  id: string;
+  apiId?: string;        // null = orphaned (not yet mapped to an API)
+  k8sServiceName: string;
+  k8sNamespace: string;
+  k8sClusterId: string;
+  metadataHash: string;  // SHA-256(serviceName:namespace:apiName:apiVersion)
+  status: string;
+};
+
+// User (from upsert or session)
+type User = {
+  id: string;
+  externalId: string;
+  contactInfo: ContactInfo;
+  team?: Team;
+  orgId: string;
+  orgName: string;
+  roles?: Role[];
+};
+
+// Organisation
+type Organisation = {
+  id: string;
+  name: string;
+  description?: string;
+  needsUpdate?: boolean;
+};
+```
+
+---
+
+## Authentication and Session
+
+### Token
+
+Auth tokens come from Clerk. Use the `useAuthToken()` hook — never parse the JWT manually.
+
+```typescript
+// ✅ CORRECT
+const authToken = useAuthToken();
+const data = await getTeamsForOrg(authToken, orgId);
+
+// ❌ WRONG — JWT parsing for org ID
+const decoded = JSON.parse(atob(authToken.split('.')[1]));
+const orgId = decoded.org_id;
+```
+
+### Organization ID
+
+**Always use internal org UUID from context, not the Clerk external org ID.**
+
+```typescript
+// ✅ CORRECT
+const { organization } = useUserSessionContext();
+const response = await getTeamsForOrg(authToken, organization.id);
+
+// ❌ WRONG — external Clerk org ID
+const decoded = ...; const orgId = decoded.org_id;
+```
+
+### Organization setup flow
+
+On first login, `upsertUser` returns `organization.needsUpdate = true`. The app redirects to `/organisation-profile` to complete setup. Both `user.orgId` and `upsertResponse.organization` must be checked:
+
+```typescript
+if (upsertResponse.organization) {
+  organization = { id: upsertResponse.organization.id, name: upsertResponse.organization.name };
+  needsUpdate = upsertResponse.organization.needsUpdate;
+} else if (userData.orgId) {
+  organization = { id: userData.orgId, name: userData.orgName };
+}
+if (needsUpdate && organization) {
+  router.push('/organisation-profile');
+}
+```
+
+---
+
+## Mock Server Authentication
+
+The mock server has two distinct auth modes:
+
+| Use case | Method | Header |
+|----------|--------|--------|
+| Admin operations (create, configure, delete) | Clerk JWT | `Authorization: Bearer <token>` |
+| Testing mock endpoints (automation, CI/CD) | API key | `X-Mock-API-Key: <key>` |
+
+The API key filter (`MockServerApiKeyFilter`) runs **before** the Clerk JWT filter. Mock server endpoints at `/v2/mock-server/**` bypass JWT auth entirely and use API key validation only.
+
+```typescript
+// Admin operations — use auth token
+import { MockServerAdminClient } from '@/services/mockServerAdminClient';
+const client = useMemo(() => new MockServerAdminClient(authToken), [authToken]);
+
+// Testing mock endpoints — use API key
+import { MockServerApiKeyClient } from '@/services/mockServerApiKeyClient';
+const client = new MockServerApiKeyClient(apiKey);
+const result = await client.testMockEndpoint(mockServerId, '/users/123', 'GET');
+```
+
+---
+
+## Component Patterns
+
+### Hook composition
+
+Custom hooks handle state, side effects, and business logic. Components are primarily presentational.
+
+```typescript
+// ✅ CORRECT — logic in hook
+function useApiDetails(apiId: string) {
+  const [api, setApi] = useState<Api | null>(null);
+  const [loading, setLoading] = useState(true);
+  const authToken = useAuthToken();
+  useEffect(() => {
+    getApiById(authToken, apiId).then(setApi).finally(() => setLoading(false));
+  }, [apiId, authToken]);
+  return { api, loading };
+}
+
+// Component is thin
+function ApiDetailPage({ params }: { params: { id: string } }) {
+  const { api, loading } = useApiDetails(params.id);
+  if (loading) return <LoadingSkeleton />;
+  if (!api) return <EmptyState />;
+  return <ApiDetailView api={api} />;
+}
+```
+
+### Error and loading states
+
+Every async operation must handle all three states: loading, error, empty.
+
+```typescript
+if (loading) return <CircularProgress />;
+if (error) return <Alert severity="error">{error}</Alert>;
+if (!data || data.length === 0) return <EmptyState message="No APIs found" />;
+return <DataView data={data} />;
+```
+
+### Memoize clients
+
+Service client instances that depend on the auth token should be memoized.
+
+```typescript
+const apiClient = useMemo(() => new MockServerAdminClient(authToken), [authToken]);
+```
+
+---
+
+## Anti-Patterns
+
+These will be rejected in code review:
+
+| Anti-pattern | Why | Fix |
+|---|---|---|
+| `fetch('/api-management/...')` in a component | Breaks service abstraction | Use service client function |
+| `interface MyApi { apiId: string }` | Duplicates generated types | Import from `lib/api/types` |
+| `decoded.org_id` from JWT | External ID, not backend UUID | Use `useUserSessionContext()` |
+| Large page components (2000+ lines) | Unmaintainable | Split into hooks + sub-components |
+| `any` types | Loses type safety | Use proper types from schema |
+| `useEffect` without cleanup | Memory leaks | Return cleanup function or use AbortController |
+
+---
+
+## Pre-implementation Checklist
+
+Before writing a new UI feature, confirm:
+
+- [ ] Which service client file will this use? (existing or new?)
+- [ ] Are all needed types available in `lib/api/types.ts`?
+- [ ] What are the three states: loading, error, empty?
+- [ ] Does the feature need auth token or API key auth?
+- [ ] Does the feature need org ID from context?
+- [ ] Are there any new API endpoints that need to be added to the OpenAPI spec first?
+
+---
+
+## Known Technical Debt
+
+From the architecture assessment (December 2024, score: 6.5/10):
+
+| Issue | Severity | Impact |
+|-------|----------|--------|
+| No testing infrastructure | Critical | High regression risk |
+| TypeScript/ESLint errors ignored in build | High | Masks real issues |
+| No global error boundary | High | Unhandled errors reach users |
+| Large page components (e.g. `apis/[id]/page.tsx` at 2472 lines) | Medium | Difficult to maintain |
+| Multiple UI libraries mixed (MUI + Radix + custom) | Medium | Visual inconsistency |
+| No performance monitoring | Medium | Blind to regressions |
+
+Fixing the testing infrastructure and removing `ignoreBuildErrors: true` from `next.config.js` are the highest-value items before production launch.

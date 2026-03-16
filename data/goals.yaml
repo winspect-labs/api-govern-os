@@ -28,6 +28,12 @@ goals:
     status: active
     target_date: Q1 2026
 
+  - id: production-launch
+    title: Production Launch
+    description: Ship Winspect to production — polished UI, working settings, production domain, multi-org data isolation tested, and authorization enforced
+    status: active
+    target_date: Q2 2026
+
   - id: enterprise-readiness
     title: Enterprise Readiness
     description: Multi-tenant hardening, audit trails, SLA guarantees

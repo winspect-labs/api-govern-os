@@ -5,34 +5,203 @@ status: shipped
 priority: P0
 owners: ["api-management-ui", "platform-backend-service"]
 last_updated: 2026-03-01
-tags: ["catalog", "subscriptions", "abac", "mock-server"]
+tags: ["catalog", "subscriptions", "abac", "mock-server", "api-keys"]
 ---
 
 # API Catalog
 
-API registration, OpenAPI spec management, team-based ownership, subscriptions, approval workflow, ABAC v2, and mock server.
+The core of Winspect. API registration, OpenAPI spec management, team-based ownership, subscription approval workflow, ABAC v2 authorization, mock server, and API keys.
 
 ## Status
 
 <StatusBadge status="shipped" /> <PriorityBadge priority="P0" />
 
-## Description
+**Completion: 100%** — Fully shipped. Soft delete (danger zone) is the only remaining planned backlog item.
 
-The API Catalog is the core of Winspect. It provides:
+---
 
-- **API registration** — Create APIs with OpenAPI spec upload (multipart or inline)
-- **Team-based ownership** — APIs belong to teams; teams belong to organizations
-- **Subscriptions** — Teams request access; approvers grant with permission selection and rate limits
-- **Approval workflow** — Subscription requests go through approval; versioning supported
-- **ABAC v2** — Attribute-based access control; org isolation, team isolation, permission levels (VIEW, MANAGE, ADMIN)
-- **Mock server** — Generate mock responses from OpenAPI specs for testing
-- **API keys** — Org-level API keys for programmatic access
+## Capabilities
+
+| Capability | Status |
+|-----------|--------|
+| API registration with OpenAPI spec upload | Shipped |
+| Team-based ownership | Shipped |
+| Subscription request + approval workflow | Shipped |
+| Permission levels (VIEW, MANAGE, ADMIN) | Shipped |
+| ABAC v2 org and team isolation | Shipped |
+| Mock server (generate responses from spec) | Shipped |
+| Mock server API key auth | Shipped |
+| Org-level API keys | Shipped |
+| Soft delete / danger zone | Planned (bl-004) |
+
+---
+
+## Data Model
+
+All types are in `lib/api/types.ts` (auto-generated). Key entities:
+
+### Api
+
+```typescript
+type Api = {
+  apiId: string;              // UUID
+  apiName: string;
+  version: string;
+  description?: string;
+  status: string;             // ACTIVE, DEPRECATED, etc.
+  openapiSpec?: string;       // raw OpenAPI spec (JSON or YAML)
+  operations?: Operation[];   // parsed from spec
+  teamId?: string;            // owning team
+  specSourceType?: string;    // MANUAL_UPLOAD, GITHUB, BULK_IMPORT
+  specGithubRepo?: string;
+  githubBlobUrl?: string;
+};
+```
+
+### Operation
+
+```typescript
+type Operation = {
+  id: string;
+  apiId: string;
+  operationId: string;
+  method: string;             // GET, POST, PUT, DELETE, PATCH
+  path: string;               // e.g. /users/{id}
+};
+```
+
+### MockServer
+
+```typescript
+type MockServer = {
+  mockServerId: string;
+  apiId: string;
+  mockServerName: string;
+  ownerTeamId: string;
+  isDefault: boolean;
+  apiKey: string;             // X-Mock-API-Key header value
+  isEnabled: boolean;
+};
+```
+
+### MockResponseVariant
+
+```typescript
+type MockResponseVariant = {
+  variantId: string;
+  operationId: string;        // links to Operation
+  responseName: string;
+  statusCode: number;
+  responseBody: string;       // JSON string
+  headers: Record<string, string>;
+  isDefault: boolean;
+};
+```
+
+### MockOperationConfig
+
+```typescript
+type MockOperationConfig = {
+  operationConfigId: string;
+  mockServerId: string;
+  operationId: string;
+  isEnabled: boolean;
+  responseStrategy: string;   // STATIC, RANDOM, SEQUENTIAL
+};
+```
+
+---
+
+## Service Layer
+
+All API calls go through the service layer. Never call backend endpoints directly from components.
+
+### Frontend clients
+
+| Client file | Operations |
+|-------------|-----------|
+| `services/apiManagementClient.ts` | `createApi`, `getApiById`, `getEnvironments`, `updateApi`, `deleteApi` |
+| `services/mockServerAdminClient.ts` | Create/configure mock server, manage variants, get logs, get analytics |
+| `services/mockServerApiKeyClient.ts` | Test mock endpoints via API key (machine automation) |
+| `services/subscriberApiClient.ts` | Subscription requests, approvals, listing subscribers |
+| `services/permissionsApiClient.ts` | Permission assignment, role management |
+| `services/settingsClient.ts` | Org-level API keys, org settings |
+
+### Backend endpoints (platform-backend-core, port 8080)
+
+| Method | Path | Operation |
+|--------|------|-----------|
+| `POST` | `/api-management/apis` | Create API (multipart/form-data with spec file) |
+| `GET` | `/api-management/apis` | List APIs for org |
+| `GET` | `/api-management/apis/{apiId}` | Get API details |
+| `PUT` | `/api-management/apis/{apiId}` | Update API |
+| `DELETE` | `/api-management/apis/{apiId}` | Delete API |
+| `GET` | `/api-management/apis/{apiId}/operations` | List operations |
+| `POST` | `/api-management/mock-admin/servers` | Create mock server |
+| `GET` | `/api-management/mock-admin/servers/{mockServerId}` | Get mock server |
+| `POST` | `/api-management/v2/mock-server/{mockServerId}/test` | Test mock endpoint (API key auth) |
+| `GET` | `/api-management/v2/mock-server/{mockServerId}/logs` | Get mock logs (API key auth) |
+
+---
+
+## Mock Server Authentication Detail
+
+The mock server has two auth modes that must not be confused:
+
+**Admin operations** (create, configure, update, delete) use Clerk JWT:
+```typescript
+// ✅ Correct — admin operation
+const client = useMemo(() => new MockServerAdminClient(authToken), [authToken]);
+await client.createMockServer({ apiId, mockServerName });
+```
+
+**Testing mock endpoints** (calling the mock as if it were real) uses API key via `X-Mock-API-Key`:
+```typescript
+// ✅ Correct — testing the mock
+const client = new MockServerApiKeyClient(apiKey);
+const result = await client.testMockEndpoint(mockServerId, '/users/123', 'GET');
+```
+
+The backend security filter chain order is:
+1. `MockServerApiKeyFilter` — validates `X-Mock-API-Key` for `/v2/mock-server/**` paths
+2. `ClerkJwtAuthenticationFilter` — validates JWT for all other paths (skips mock server paths)
+
+---
+
+## Authorization Model (ABAC v2)
+
+Every action on an API resource is checked by the ABAC engine. The evaluation order is:
+
+1. Super Admin → grant immediately
+2. Org isolation → deny if cross-org
+3. Org Admin → grant (skip team/subscription checks)
+4. Team check → allow if user is in the API's owning team
+5. Subscription check → allow if user has approved subscription with sufficient permission level
+
+Permission levels: `VIEW < MANAGE < ADMIN` (hierarchical)
+
+For agents implementing new resource types, the ABAC evaluator must be extended with a new resource-specific evaluator that follows this same chain. See [PDR-005](/decisions/PDR-005-abac-v2) for the full specification.
+
+---
+
+## Subscription Flow
+
+1. Consumer team requests access to an API → creates subscription with `PENDING` status
+2. API owner team (or Org Admin) approves/rejects the request
+3. On approval, a permission record is created for the consumer team: `(team_id, api_id, permission_level)`
+4. Permission level is selected during approval (VIEW, MANAGE, or ADMIN)
+5. Optional: rate limit fields stored on subscription (enforcement in Phase A of [subscription-authz](/features/subscription-authz))
+6. Consumer team can now access the API per their permission level
+
+---
 
 ## Repositories
 
-- `api-management-ui` — Catalog UI, subscription management, team management
-- `platform-backend-service` — REST API, ABAC engine, subscription logic
+- `api-management-ui` — Catalog UI, subscription management, team management, mock server UI, settings
+- `platform-backend-service` — REST API, ABAC engine, subscription logic, mock server backend
 
-## Completion
+---
 
-100% — Shipped. Soft delete (danger zone) planned as backlog item.
+## Pending Work
+
+- **bl-004**: Soft delete / danger zone — `deleted_at` timestamp, filtered from all queries, danger zone UI in settings

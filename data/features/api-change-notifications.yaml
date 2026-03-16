@@ -1,0 +1,19 @@
+features:
+  - id: api-change-notifications
+    name: API Change Notifications & Changelogs
+    status: in-progress
+    priority: P0
+    completion: 25
+    repos:
+      - api-management-ui
+      - platform-backend-service
+    description: >
+      Notify API consumers automatically when a spec changes. Let API owners attach changelogs
+      and release notes to updates. Deliver via UI, email, and Slack based on per-user preferences.
+      The data model and notification backbone exist; delivery and wiring are incomplete.
+    goal_ids:
+      - production-launch
+      - core-platform
+    links:
+      - label: Spec
+        url: /features/api-change-notifications

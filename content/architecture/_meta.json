@@ -1,5 +1,7 @@
 {
   "index": "Overview",
   "repositories": "Repositories",
-  "tech-stack": "Tech Stack"
+  "tech-stack": "Tech Stack",
+  "frontend-patterns": "Frontend Patterns",
+  "backend-patterns": "Backend Patterns"
 }

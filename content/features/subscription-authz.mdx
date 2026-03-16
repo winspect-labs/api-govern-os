@@ -5,56 +5,227 @@ status: planned
 priority: P0
 owners: ["platform-backend-service"]
 last_updated: 2026-03-01
-tags: ["authorization", "subscription", "opa", "gateway"]
+tags: ["authorization", "subscription", "opa", "gateway", "abac"]
 ---
 
 # Subscription-Based Authorization
 
-Enable runtime authorization enforcement without replacing customer authentication. Teams subscribe to APIs; authorization flows from the catalog.
+Enable runtime authorization enforcement without replacing customer authentication. Teams subscribe to APIs; Winspect enforces whether a given identity is allowed to call them.
 
 ## Status
 
 <StatusBadge status="planned" /> <PriorityBadge priority="P0" />
 
-## Description
+**Completion: 0%** — Design complete. The catalog-side subscription workflow and ABAC are built. The runtime enforcement API is not yet implemented.
 
-**Strategic position:** We are NOT replacing your authentication. We are adding subscription-based authorization ON TOP of it.
+---
 
-### Current State (Built)
+## Strategic Position
 
-- Team-based subscription requests
-- Approval workflow with versioning
-- Permission selection
-- Rate limit configuration
-- ABAC-based access control
+Winspect does **not** replace your authentication. Your services continue to use whatever auth they use today (OAuth, mTLS, API keys, cloud IAM). Winspect adds a subscription-based authorization layer **on top** of it:
 
-### Phased Rollout (Planned)
+```
+Caller → Your Auth (unchanged) → Winspect AuthZ check → Your API
+```
 
-| Phase | Name | Latency | Effort |
-|-------|------|---------|--------|
-| A | External AuthZ REST API (`POST /v1/authz/check`) | 5–50ms | 4–6 weeks |
-| B | Gateway plugins (Kong, Envoy, AWS GW) | 5–50ms | 8–12 weeks |
-| C | Full platform with SDKs (TS, Python, Java, Go) | sub-1ms cached | 16–24 weeks |
-| D | OPA policy bundles (edge, offline-capable) | sub-1ms | 6–8 weeks |
+The `POST /v1/authz/check` call answers: "Given this identity, is it allowed to call this API?" — based on subscriptions, approved permissions, and rate limits configured in the catalog.
 
-**Recommended order:** A → B → D → C
+---
 
-### AuthZ Check API (Phase A)
+## What's Already Built
+
+The catalog-side infrastructure exists and is shipped:
+
+| Component | Status |
+|-----------|--------|
+| Subscription request flow (PENDING → APPROVED / REJECTED) | Shipped |
+| Approval workflow with versioning | Shipped |
+| Permission level selection on approval (VIEW, MANAGE, ADMIN) | Shipped |
+| Rate limit fields on subscription (stored, not yet enforced) | Shipped |
+| ABAC v2 policy engine (internal catalog access control) | Shipped |
+| Subscription uniqueness constraint `(identity_type, identity_value, api_id)` | Shipped |
+
+What's missing is the **external-facing AuthZ API** — the endpoint that external services call to check if a request should be allowed.
+
+---
+
+## Data Model
+
+### Subscription entity
+
+```typescript
+type Subscription = {
+  id: string;             // UUID
+  apiId: string;          // which API
+  subscriberTeamId: string;
+  identityType: string;   // see identity types below
+  identityValue: string;  // e.g. "client-id-xyz"
+  status: string;         // PENDING, APPROVED, REJECTED
+  permissionLevel: string;// VIEW, MANAGE, ADMIN
+  rateLimitPerMinute?: number;
+  rateLimitPerDay?: number;
+  approvedAt?: string;
+  approvedBy?: string;
+};
+```
+
+### Uniqueness constraint
+
+```sql
+UNIQUE (identity_type, identity_value, api_id)
+```
+
+One subscription per `(identity, API)` pair. An identity cannot have two subscriptions to the same API. This constraint is intentional and must not be loosened — see [PDR-003](/decisions/PDR-003-subscription-identity).
+
+### Supported identity types
+
+| Type | Example value |
+|------|--------------|
+| `OAUTH_CLIENT_ID` | `client-123-abc` |
+| `OAUTH_SUBJECT` | `user@example.com` |
+| `MTLS_SUBJECT_DN` | `CN=service,O=Company` |
+| `MTLS_SPIFFE_ID` | `spiffe://trust/ns/default/sa/svc` |
+| `API_KEY` | `sk-abc123` |
+| `AWS_IAM_ROLE_ARN` | `arn:aws:iam::123:role/my-svc` |
+| `GCP_SERVICE_ACCOUNT` | `svc@project.iam.gserviceaccount.com` |
+| `AZURE_MANAGED_IDENTITY` | `object-id-guid` |
+| `K8S_SERVICE_ACCOUNT` | `default:my-service` |
+| `CUSTOM` | Any custom identifier |
+
+---
+
+## Phased Rollout
+
+Build incrementally. Stop at any phase once sufficient value is delivered. Phases are independent — B does not require D, D does not require B.
+
+| Phase | Name | What It Does | Latency | Effort |
+|-------|------|--------------|---------|--------|
+| **A** | External AuthZ REST API | HTTP endpoint external services call to check authorization | 5–50ms | 4–6 weeks |
+| **B** | Gateway plugins | Native plugins for Kong, Envoy, AWS API Gateway | 5–50ms | 8–12 weeks |
+| **D** | OPA policy bundles | Edge-deployable bundles, offline-capable | sub-1ms | 6–8 weeks |
+| **C** | Platform SDKs | TypeScript, Python, Java, Go client libraries | sub-1ms cached | 16–24 weeks |
+
+**Recommended order: A → B → D → C**
+
+Phase A is the fastest path to value. It requires no infrastructure changes from customers and works with any gateway, proxy, or application. See [PDR-004](/decisions/PDR-004-subscription-authz-phased) for the rationale.
+
+---
+
+## Phase A: External AuthZ REST API
+
+### Endpoint
 
 ```
 POST /v1/authz/check
-Input:  { subject: { type, value }, resource: { apiId }, action }
-Output: { allowed, subscription, permissions[], rateLimit, decision }
+Content-Type: application/json
+Authorization: Bearer <api-key>
 ```
 
-### Supported Identity Types
+### Request
 
-`OAUTH_CLIENT_ID`, `OAUTH_SUBJECT`, `MTLS_SUBJECT_DN`, `MTLS_SPIFFE_ID`, `API_KEY`, `AWS_IAM_ROLE_ARN`, `GCP_SERVICE_ACCOUNT`, `AZURE_MANAGED_IDENTITY`, `K8S_SERVICE_ACCOUNT`, `CUSTOM`
+```json
+{
+  "subject": {
+    "type": "OAUTH_CLIENT_ID",
+    "value": "client-123-abc"
+  },
+  "resource": {
+    "apiId": "550e8400-e29b-41d4-a716-446655440000"
+  },
+  "action": "READ"
+}
+```
+
+### Response
+
+```json
+{
+  "allowed": true,
+  "subscription": {
+    "id": "sub-uuid",
+    "status": "APPROVED"
+  },
+  "permissions": ["VIEW"],
+  "rateLimit": {
+    "perMinute": 100,
+    "perDay": 10000
+  },
+  "decision": {
+    "reason": "SUBSCRIPTION_APPROVED",
+    "evaluatedAt": "2026-03-01T10:00:00Z"
+  }
+}
+```
+
+### Evaluation logic
+
+```
+1. Look up subscriptions WHERE identity_type = ? AND identity_value = ? AND api_id = ?
+2. If no subscription found → { allowed: false, reason: "NO_SUBSCRIPTION" }
+3. If subscription found but status != APPROVED → { allowed: false, reason: "SUBSCRIPTION_PENDING/REJECTED" }
+4. If subscription APPROVED → return allowed: true with permission level and rate limit
+```
+
+### Backend implementation target
+
+- Package: `platform-backend-core/src/main/java/com/platform_backend/authz/`
+- Controller: `AuthzController` (new)
+- Service: `AuthzService` / `AuthzServiceImpl` (new)
+- Endpoint spec: add to `api-spec.yaml` under `/v1/authz/check`
+
+---
+
+## ABAC Integration
+
+The existing ABAC v2 engine enforces **internal** catalog access (who can view/manage/delete APIs within the Winspect UI). The subscription AuthZ API enforces **external** access (whether an external system's identity is allowed to call an API at runtime).
+
+These are complementary, not conflicting:
+
+| Scope | Engine | Who calls it |
+|-------|--------|-------------|
+| Internal catalog access | ABAC v2 (`platform-backend-core`) | Winspect UI / API users |
+| External API access | AuthZ check API (`/v1/authz/check`) | External services, gateways, agents |
+
+The AuthZ check API reads from the same `subscriptions` table. It does not run the full ABAC policy chain — it only checks subscription status and permission level for the given identity.
+
+---
+
+## Phase B: Gateway Plugins
+
+Native plugins embed the AuthZ check locally, eliminating the network round-trip:
+
+- **Kong**: Lua plugin calling AuthZ check with local caching
+- **Envoy**: External authorization filter (gRPC)
+- **AWS API Gateway**: Lambda authorizer backed by Winspect
+
+Configuration flow:
+1. Customer installs plugin
+2. Plugin is configured with Winspect API URL and org API key
+3. On each request, plugin calls `/v1/authz/check` (or uses cached decision)
+4. Plugin returns 200 (pass) or 403 (deny) to the gateway
+
+---
+
+## Phase D: OPA Policy Bundles
+
+Winspect generates OPA (Open Policy Agent) policy bundles from the subscription data. Customers deploy OPA as a sidecar. Decisions are made locally — no network call required.
+
+- Bundle refresh: periodic pull from Winspect API (configurable interval)
+- Latency: sub-1ms (local evaluation)
+- Offline-capable: last-known bundle used if Winspect is unreachable
+
+---
+
+## Frontend Considerations
+
+The subscription workflow UI is already built. For the AuthZ check API (Phase A), the UI may need:
+
+1. A way to view which external identities have subscriptions (subscription management page enhancement)
+2. A way to test the AuthZ check from the UI (optional developer tool)
+3. API key management (already built in settings) — org API keys are used to authenticate AuthZ check calls
+
+---
 
 ## Repositories
 
-- `platform-backend-service` — AuthZ API, policy evaluation
-
-## Completion
-
-0% — Design complete. Implementation pending.
+- `platform-backend-service` — AuthZ check API, subscription entities, ABAC engine, OPA bundle generation (future)

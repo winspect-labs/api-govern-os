@@ -6,14 +6,59 @@ last_updated: 2026-03-01
 
 # Roadmap
 
-## Q1 2026
+Quarterly themes aligned to goals. Detailed backlog items are tracked in the [backlog dashboard](/backlog).
 
-- Ship API Catalog v1
-- Complete user auth polish
-- Beta launch
+---
 
-## Q2 2026
+## Q1 2026 — Discovery + Launch Prep
 
-- Observability integration
-- Team collaboration features
-- GA launch
+**Status: In Progress**
+
+- K8s discovery MVP: bulk import UI (bl-002), manual mapping dialog (bl-003)
+- RAG semantic search polish and accuracy tuning
+- UI completeness audit — loading states, empty states, error handling (bl-008)
+- Settings and configuration end-to-end testing (bl-009)
+- Multi-org data isolation testing (bl-011)
+- Auto-trigger notifications on API spec change (bl-015)
+- Notification preferences settings UI (bl-018)
+- Extend ChangelogEntry and ContactInfo schemas (bl-020, bl-021)
+
+---
+
+## Q2 2026 — Authorization + Production Launch
+
+**Status: Planned**
+
+- External AuthZ REST API `POST /v1/authz/check` (bl-001) — Phase A of subscription authz
+- Reserve production domain, DNS, TLS configuration (bl-010)
+- Production environment setup on Railway (bl-013)
+- Authorization enforcement end-to-end testing (bl-012)
+- Production smoke test across two organizations (bl-014)
+- **Production launch**
+- Email delivery for notifications (bl-016)
+- Slack delivery via Incoming Webhook (bl-017)
+- Changelog form on API spec update (bl-019)
+- GitHub spec sync integration (bl-005) — design-time discovery from GitHub
+- Usage analytics foundation (bl-007)
+
+---
+
+## Q3 2026 — Gateway + Policy
+
+**Status: Planned**
+
+- Gateway plugins: Kong, Envoy, AWS API Gateway (Phase B of subscription authz)
+- OPA policy bundles — edge-deployable, offline-capable (bl-006) — Phase D
+- Usage analytics per subscription (bl-007)
+- Soft delete / danger zone for APIs (bl-004)
+
+---
+
+## Q4 2026 — Enterprise Readiness
+
+**Status: Planned**
+
+- SDKs: TypeScript, Python, Java, Go (Phase C of subscription authz)
+- Audit trails
+- SLA guarantees and observability
+- Enterprise onboarding documentation
