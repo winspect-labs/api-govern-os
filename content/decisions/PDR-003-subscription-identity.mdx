@@ -1,0 +1,27 @@
+---
+title: PDR-003 Subscription Identity Uniqueness
+category: decision
+status: accepted
+last_updated: 2026-03-01
+---
+
+# PDR-003: One Subscription Per (Identity, API) Pair
+
+## Context
+
+Teams subscribe to APIs. We need to support multiple identity types (OAuth, mTLS, API key, etc.) for authorization checks without replacing customer auth.
+
+## Decision
+
+**One subscription per (identity, API) pair.** Uniqueness constraint on (identity_type, identity_value, api_id). Ten supported identity types: `OAUTH_CLIENT_ID`, `OAUTH_SUBJECT`, `MTLS_SUBJECT_DN`, `MTLS_SPIFFE_ID`, `API_KEY`, `AWS_IAM_ROLE_ARN`, `GCP_SERVICE_ACCOUNT`, `AZURE_MANAGED_IDENTITY`, `K8S_SERVICE_ACCOUNT`, `CUSTOM`.
+
+## Rationale
+
+- Enables flexible auth integration (customers keep their auth)
+- Prevents duplicate subscriptions for same identity
+- Supports phased rollout: External AuthZ API → gateway plugins → OPA → SDKs
+
+## Consequences
+
+- Positive: Clear semantics; no ambiguity
+- Negative: Identity verification required to prevent spoofing

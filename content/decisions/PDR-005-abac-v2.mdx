@@ -1,0 +1,35 @@
+---
+title: PDR-005 ABAC v2 Policy Engine
+category: decision
+status: accepted
+last_updated: 2026-03-01
+---
+
+# PDR-005: ABAC v2 Policy Engine
+
+## Context
+
+We need fine-grained access control for APIs, teams, and organizations. Role-based access was insufficient.
+
+## Decision
+
+**ABAC v2 — Hierarchical policy engine.** Evaluation order (all-or-nothing, early exit):
+
+1. **Super Admin** (`platform:super_admin`) → immediate grant
+2. **Org Isolation** (`userOrgId == resourceOrgId`) → deny if cross-org
+3. **Org Admin Override** (`org:admin` or `org:manage`) → skip remaining checks
+4. **Resource-Specific Evaluator** → team isolation for API/TEAM resources
+5. **Resource Permission Check** → final deny if permission missing
+
+Permission levels: `VIEW < MANAGE < ADMIN` (hierarchical inheritance).
+
+## Rationale
+
+- Org-scoped resources: ORGANISATION, USER, PROJECT
+- Team-scoped resources: API, TEAM (require team isolation for non-READ)
+- Clerk provides AuthN; ABAC provides AuthZ
+
+## Consequences
+
+- Positive: Fine-grained; supports multi-tenant
+- Negative: Complex evaluation order; must be documented

@@ -1,0 +1,45 @@
+---
+title: RAG Semantic Search
+category: feature
+status: in-progress
+priority: P1
+owners: ["platform-backend-service", "api-management-ui"]
+last_updated: 2026-03-01
+tags: ["rag", "semantic-search", "embeddings", "pgvector"]
+---
+
+# RAG Semantic Search
+
+Natural language API discovery via vector embeddings. Find APIs by describing what they do, not by keyword matching.
+
+## Status
+
+<StatusBadge status="in-progress" /> <PriorityBadge priority="P1" />
+
+## Description
+
+The RAG (Retrieval-Augmented Generation) system enables semantic search:
+
+- **Vector store** — PostgreSQL with pgvector extension, HNSW index
+- **Embeddings** — OpenAI `text-embedding-3-small` (1536 dimensions) in production; Ollama for local dev
+- **Chunking** — L1: API metadata (name, version, description, team, tags); L2: endpoint chunks (method, path, summary, params, responses)
+- **Architecture** — `api-management-ui` → `platform-backend-service` (proxy) → `platform-ai-core` (port 9090). RAG data lives in isolated `platform_ai` schema.
+
+### MVP Scope
+
+Semantic search returning structured API cards. Conversational chat deferred to v2.
+
+### Success Criteria
+
+- Over 80% accuracy (top 5 results contain correct API)
+- Under 200ms search latency
+- Handles 1000+ APIs
+
+## Repositories
+
+- `platform-backend-service` — Proxy controller to platform-ai; platform-ai-core owns RAG data
+- `api-management-ui` — Search UI, types from OpenAPI
+
+## Completion
+
+~70% — Search pipeline and indexing in place. Polish and optimization in progress.

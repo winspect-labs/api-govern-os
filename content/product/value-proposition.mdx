@@ -6,9 +6,16 @@ last_updated: 2026-03-01
 
 # Value Proposition
 
+## Core Principle: Augment, Don't Replace
+
+We are **not** replacing your authentication. We are adding subscription-based authorization **on top** of it. Teams subscribe to APIs and get governance—rate limits, permissions, audit—without ripping out Clerk, Auth0, or custom auth.
+
 ## Core Value Props
 
-1. **Unified workflow** — One place for build, deploy, and observe
-2. **Less context switching** — Single dashboard, single mental model
-3. **Faster onboarding** — New team members productive in days, not weeks
-4. **Lower total cost** — Consolidate tools, reduce license sprawl
+1. **Single API inventory** — One place for all APIs, whether manually registered or discovered from Kubernetes. No more scattered spreadsheets or tribal knowledge.
+
+2. **Subscription-based authorization** — Teams request access; approvers grant it. Authorization flows from the catalog. No custom middleware per API.
+
+3. **Discover without hunting** — Semantic search ("Find APIs that handle user authentication") instead of keyword matching. RAG-powered, natural language.
+
+4. **Agent-accessible** — Product knowledge lives in a structured repo (this one). Agents read it before implementing; humans review. The specification and the implementation share a lifecycle.

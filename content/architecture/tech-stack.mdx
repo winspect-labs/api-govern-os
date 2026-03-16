@@ -6,13 +6,36 @@ last_updated: 2026-03-01
 
 # Tech Stack
 
+## Frontend
+
+- **Next.js 14** — App Router, React 19
+- **Material UI (MUI) v5** — Component library
+- **Clerk** — Authentication (AuthN)
+- **TypeScript** — Strict mode; types from OpenAPI generation
+- **Monaco Editor, Swagger UI, React Markdown, js-yaml** — Spec editing and docs
+
+## Backend
+
+- **Spring Boot 3.4.1** (platform-backend-core), **3.5.7** (platform-ai-core)
+- **Java 17** (core), **Java 21** (platform-ai)
+- **PostgreSQL** — `platform_backend` schema (core data), `platform_ai` schema (RAG, isolated)
+- **pgvector** — Vector extension for embeddings; HNSW index
+- **Flyway** — Database migrations
+
+## Discovery Agent
+
+- **Spring Boot 3.4.1, Java 17** — Lightweight, stateless
+- **Kubernetes Java Client** — Service discovery
+- **Helm** — Deployment in customer clusters
+
+## Deployment
+
+- **Railway** — platform-backend-core, platform-ai-core
+- **Vercel** — api-management-ui, api-govern-os
+
 ## Rationale
 
-- **Next.js** — Full-stack React, great DX, Vercel deployment
-- **Node.js/Express** — Backend team familiarity, rich ecosystem
-- **PostgreSQL** — Relational data, ACID, mature tooling
-
-## Alternatives Considered
-
-- Remix vs Next.js — Chose Next for ecosystem and deployment
-- Go vs Node — Chose Node for team velocity and shared language with frontend
+- **Next.js** — Full-stack React, strong ecosystem, Vercel deployment
+- **Spring Boot** — Enterprise-grade, rich ecosystem, JPA/Flyway
+- **PostgreSQL + pgvector** — Single DB for relational + vector; avoids managed vector store cost
+- **Clerk** — Org-based auth out of the box; custom ABAC for AuthZ

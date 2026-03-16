@@ -1,27 +1,35 @@
 # Product goals - OKRs or strategic objectives
 # ===========================================
-# FORK: Replace with your goals. Features and backlog items map to goals via goal_ids.
 # AGENTS: When a goal is achieved, set status: accomplished. Reference goal_ids in
 #        data/features/*.yaml and data/backlog.yaml to keep work aligned with goals.
 
 goals:
-  - id: mvp-launch
-    title: MVP Launch
-    description: Ship core pet catalog and checkout for first customers
+  - id: core-platform
+    title: Core API Management Platform
+    description: Ship API catalog, subscriptions, ABAC, and mock server for first customers
+    status: accomplished
+    target_date: Q4 2025
+
+  - id: automated-discovery
+    title: K8s API Auto-Discovery
+    description: Eliminate manual API registration by discovering APIs from Kubernetes services
     status: active
     target_date: Q1 2026
-    links:
-      - label: OKR doc
-        url: https://example.com/okr-q1
 
-  - id: customer-acquisition
-    title: Customer Acquisition
-    description: Reduce friction to first purchase; grow user base
+  - id: subscription-authz
+    title: Subscription-Based Authorization
+    description: Enable runtime authorization enforcement without replacing customer auth
     status: active
     target_date: Q2 2026
 
-  - id: operational-scale
-    title: Operational Scale
-    description: Inventory management, order fulfillment, admin tools
+  - id: ai-discoverability
+    title: AI-Powered API Discoverability
+    description: Semantic search via RAG for natural language API discovery
     status: active
-    target_date: Q2 2026
+    target_date: Q1 2026
+
+  - id: enterprise-readiness
+    title: Enterprise Readiness
+    description: Multi-tenant hardening, audit trails, SLA guarantees
+    status: active
+    target_date: Q4 2026

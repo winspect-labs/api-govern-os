@@ -1,53 +1,118 @@
 # Prioritized backlog - ordered by ICE score
 # ==========================================
-# FORK: Replace with your backlog items. Update ids, titles, feature_ids, goal_ids.
-# AGENTS: When you ship an item, set status: shipped. Link items to features via feature_id
-#        (must match an id in data/features/*.yaml). ICE: Impact (1-10), Confidence (1-10), Ease (1-10).
-#
+# AGENTS: When you ship an item, set status: shipped. Link items to features via feature_id.
+# ICE: Impact (1-10), Confidence (1-10), Ease (1-10).
 # Status flow: proposed → approved → in-progress → shipped (or deferred)
 
 items:
   - id: bl-001
-    title: Add pet image gallery with lightbox
+    title: External AuthZ REST API (POST /v1/authz/check)
     status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: Enable teams to check subscription-based authorization at runtime without replacing auth
+    goal_ids:
+      - subscription-authz
+    feature_id: subscription-authz
+    links:
+      - label: Spec
+        url: /features/subscription-authz
+
+  - id: bl-002
+    title: K8s discovery bulk import UI
+    status: in-progress
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 6
+    description: Create APIs from orphaned runtime records in one action when system is empty
+    goal_ids:
+      - automated-discovery
+    feature_id: k8s-discovery
+    links:
+      - label: Spec
+        url: /features/k8s-discovery
+
+  - id: bl-003
+    title: Manual mapping dialog (link orphaned record to API)
+    status: in-progress
     priority: P1
     ice:
       impact: 7
-      confidence: 8
-      ease: 6
-    description: Show multiple images per pet with zoom and swipe
+      confidence: 9
+      ease: 7
+    description: Link discovered runtime record to existing API in the catalog
     goal_ids:
-      - mvp-launch
+      - automated-discovery
+    feature_id: k8s-discovery
     links:
       - label: Spec
-        url: /features/pet-catalog
+        url: /features/k8s-discovery
 
-  - id: bl-002
-    title: Guest checkout (no account required)
+  - id: bl-004
+    title: Soft delete / danger zone for APIs
     status: planned
     priority: P1
+    ice:
+      impact: 6
+      confidence: 8
+      ease: 5
+    description: Soft delete APIs with deleted_at; filter from all endpoints; danger zone UI
+    goal_ids:
+      - core-platform
+    feature_id: api-catalog
+    links:
+      - label: Spec
+        url: /features/api-catalog
+
+  - id: bl-005
+    title: GitHub spec sync integration
+    status: planned
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 6
+      ease: 5
+    description: Sync API specs from GitHub repos (design-time discovery)
+    goal_ids:
+      - automated-discovery
+    feature_id: k8s-discovery
+    links:
+      - label: Spec
+        url: /features/k8s-discovery
+
+  - id: bl-006
+    title: OPA policy bundles (Phase D authz)
+    status: planned
+    priority: P2
     ice:
       impact: 8
       confidence: 7
       ease: 5
-    description: Allow one-time purchase without creating an account
+    description: Edge-deployable policy bundles for offline-capable authorization
     goal_ids:
-      - customer-acquisition
+      - subscription-authz
+    feature_id: subscription-authz
     links:
       - label: Spec
-        url: /features/shopping-cart
+        url: /features/subscription-authz
 
-  - id: bl-003
-    title: Low-stock notification for admins
+  - id: bl-007
+    title: Usage analytics per subscription
     status: planned
     priority: P2
     ice:
-      impact: 6
-      confidence: 6
-      ease: 7
-    description: Email alert when pet stock falls below threshold
+      impact: 7
+      confidence: 7
+      ease: 6
+    description: Track usage per subscription for rate limiting and billing
     goal_ids:
-      - operational-scale
+      - subscription-authz
+    feature_id: subscription-authz
     links:
       - label: Spec
-        url: /features/order-management
+        url: /features/subscription-authz

@@ -1,75 +1,47 @@
-# Product OS — Agent Interaction Guide
+# Winspect API Govern OS — Agent Interaction Guide
 
-Product OS is **built for agents, by agents**. It is the ultimate source of truth for product knowledge. Agents get context from this repo and **update it as the product evolves**. Humans stay aware and review; agents do the heavy lifting. Kill the drift.
+This repo is the **source of truth** for Winspect product knowledge. Agents get context from here and **update it when code ships**. Humans review; agents do the heavy lifting.
 
-- **Agents read** — Load Product OS before implementing or scoping work.
-- **Agents write** — Update Product OS when code ships. Create PRs.
-- **Augment, don't replace** — Jira, Linear, and other tools augment Product OS. We don't eliminate them.
+- **Agents read** — Load this repo before implementing or scoping work in api-management-ui, platform-backend-service, or winspect-api-discovery-agent.
+- **Agents write** — Update this repo when code ships. Create PRs.
+- **Augment, don't replace** — Jira, Linear augment this. We don't eliminate them.
 
-**Full workflow**: See [content/about-product-os/agent-workflow.mdx](content/about-product-os/agent-workflow.mdx) for context preparation, when to read/update, and automation.
+**Full workflow**: See [content/about-product-os/agent-workflow.mdx](content/about-product-os/agent-workflow.mdx).
 
 ## Data Sources (Machine-Readable)
 
-### Primary Data Files
+| File | Purpose |
+|------|---------|
+| `data/schema.yaml` | Domain→file mapping. Domains: api-catalog, discovery, ai-search, subscription-authz |
+| `data/features/*.yaml` | Feature registry per domain. Status, priority, completion, goal_ids, repos |
+| `data/backlog.yaml` | Prioritized backlog with ICE scores, feature_id, goal_ids |
+| `data/goals.yaml` | Strategic goals: core-platform, automated-discovery, subscription-authz, ai-discoverability, enterprise-readiness |
+| `data/repositories.yaml` | api-management-ui, platform-backend-service, winspect-api-discovery-agent, api-govern-os |
+| `data/roadmap.yaml` | Q1–Q4 2026 themes |
+| `data/research-sources.yaml` | Cited sources for research |
 
-| File | Purpose | Use For |
-|------|---------|---------|
-| `data/features/*.yaml` | Feature registry (per domain) with status, priority, completion, goal_ids, links | Feature status reports, gap analysis |
-| `data/schema.yaml` | Unified schema: entity structures (goals, features, OKRs) + domains | Structure reference for agents |
-| `data/backlog.yaml` | Prioritized backlog with ICE scores, goal_ids, links | What to build next, prioritization |
-| `data/goals.yaml` | Strategic goals (OKRs) with status active/accomplished | Goal tracking, feature/backlog mapping |
-| `data/repositories.yaml` | Repo map, tech stack, ownership | Architecture overview, dependency mapping |
-| `data/research-sources.yaml` | Cited sources for research | Fact-checking, traceability |
-| `data/roadmap.yaml` | Timeline-based roadmap | Timeline alignment |
+## Winspect Repos
 
-### How to Read Data
-
-1. **Features:** Read `data/schema.yaml` for domain→file mapping, then parse each `data/features/{domain}.yaml` for the full feature list. Each feature has `id`, `name`, `status`, `priority`, `completion`, `repos`, `goal_ids`, `links`.
-2. **Backlog:** Parse `data/backlog.yaml` for ordered items. ICE scores (impact, confidence, ease) indicate priority. Items may have `goal_ids` and `links`.
-3. **Goals:** Parse `data/goals.yaml` for strategic goals. Use `goal_ids` on features/backlog to map work to goals. Mark goals `accomplished` when done.
-3. **Research:** Parse `data/research-sources.yaml` for cited sources. Reference by `id` in research reports.
+- **api-management-ui** — Next.js 14, Material UI, Clerk. Catalog, subscriptions, discovery, RAG search.
+- **platform-backend-service** — Spring Boot monorepo (backend-core + platform-ai). API management, ABAC, discovery, RAG proxy.
+- **winspect-api-discovery-agent** — K8s discovery agent. Helm-deployed in customer clusters.
+- **api-govern-os** — This repo. Product knowledge.
 
 ## Content Structure
 
-- **Product** — Vision, pitch, value prop, target audience
-- **Features** — Per-feature MDX pages + `data/features/*.yaml` (per domain)
+- **Product** — Vision, pitch, value prop, target audience, competitive landscape
+- **Features** — api-catalog, k8s-discovery, rag-search, subscription-authz
 - **Architecture** — Repo map, tech stack
-- **Backlog** — Prioritization framework + `data/backlog.yaml` + per-item pages
-- **Research** — Market, competitors, technology (with sources)
-- **Decisions** — PDR/ADR format
-- **Metrics** — KPIs, benchmarks
-
-## Frontmatter Convention
-
-Every MDX file has YAML frontmatter. Key fields:
-
-```yaml
-title: "Page Title"
-category: feature | product | backlog-item | research | decision | metrics
-status: planned | in-progress | shipped | deprecated  # for features/backlog
-priority: P0 | P1 | P2 | P3
-owners: ["repo-1", "repo-2"]  # for features
-last_updated: YYYY-MM-DD
-tags: []
-```
+- **Decisions** — PDR-001 (spec record primary) through PDR-005 (ABAC v2)
+- **Research** — API governance market, RAG/pgvector, competitor landscape
 
 ## Making Recommendations
 
-When asked "what should we build next?" or similar:
-
-1. Read `data/backlog.yaml` — items are pre-prioritized by ICE
-2. Read `data/features/*.yaml` — identify gaps (low completion, blocked features)
-3. Read `content/research/` — market and competitor context
-4. Read `content/decisions/` — past decisions and rationale
-5. Output: Prioritized list with reasoning, referencing specific data
-
-## Adding Content
-
-- Use templates in `templates/` for new pages
-- Update both the MDX file and the corresponding `data/*.yaml` when changing feature/backlog status
-- Add new sources to `data/research-sources.yaml` before citing in research
+1. Read `data/backlog.yaml` — items pre-prioritized by ICE
+2. Read `data/features/*.yaml` — identify gaps (low completion, blocked)
+3. Read `content/decisions/` — past decisions and rationale
+4. Output: Prioritized list with reasoning, referencing specific data
 
 ## Validation
 
-- YAML data files must conform to `schemas/*.schema.json`
-- Run `npm run validate` to check frontmatter and data
+Run `npm run validate` before committing changes to data/.

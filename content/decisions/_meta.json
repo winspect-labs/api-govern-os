@@ -1,4 +1,8 @@
 {
   "index": "Index",
-  "PDR-001-example": "PDR-001: Example Decision"
+  "PDR-001-spec-record-primary": "PDR-001: Spec Record Primary",
+  "PDR-002-dual-discovery-model": "PDR-002: Dual Discovery Model",
+  "PDR-003-subscription-identity": "PDR-003: Subscription Identity",
+  "PDR-004-subscription-authz-phased": "PDR-004: AuthZ Phased Rollout",
+  "PDR-005-abac-v2": "PDR-005: ABAC v2"
 }

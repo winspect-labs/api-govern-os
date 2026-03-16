@@ -1,0 +1,38 @@
+---
+title: API Catalog
+category: feature
+status: shipped
+priority: P0
+owners: ["api-management-ui", "platform-backend-service"]
+last_updated: 2026-03-01
+tags: ["catalog", "subscriptions", "abac", "mock-server"]
+---
+
+# API Catalog
+
+API registration, OpenAPI spec management, team-based ownership, subscriptions, approval workflow, ABAC v2, and mock server.
+
+## Status
+
+<StatusBadge status="shipped" /> <PriorityBadge priority="P0" />
+
+## Description
+
+The API Catalog is the core of Winspect. It provides:
+
+- **API registration** — Create APIs with OpenAPI spec upload (multipart or inline)
+- **Team-based ownership** — APIs belong to teams; teams belong to organizations
+- **Subscriptions** — Teams request access; approvers grant with permission selection and rate limits
+- **Approval workflow** — Subscription requests go through approval; versioning supported
+- **ABAC v2** — Attribute-based access control; org isolation, team isolation, permission levels (VIEW, MANAGE, ADMIN)
+- **Mock server** — Generate mock responses from OpenAPI specs for testing
+- **API keys** — Org-level API keys for programmatic access
+
+## Repositories
+
+- `api-management-ui` — Catalog UI, subscription management, team management
+- `platform-backend-service` — REST API, ABAC engine, subscription logic
+
+## Completion
+
+100% — Shipped. Soft delete (danger zone) planned as backlog item.

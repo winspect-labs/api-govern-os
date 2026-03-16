@@ -1,0 +1,35 @@
+---
+title: PDR-004 Subscription AuthZ Phased Rollout
+category: decision
+status: accepted
+last_updated: 2026-03-01
+---
+
+# PDR-004: Subscription-Based Authorization Phased Rollout
+
+## Context
+
+We need to enable runtime authorization enforcement. Options vary in latency, effort, and deployment model.
+
+## Decision
+
+**Phased rollout (A → B → D → C):**
+
+| Phase | Name | Latency | Effort |
+|-------|------|---------|--------|
+| A | External AuthZ REST API (`POST /v1/authz/check`) | 5–50ms | 4–6 weeks |
+| B | Gateway plugins (Kong, Envoy, AWS GW) | 5–50ms | 8–12 weeks |
+| D | OPA policy bundles (edge, offline) | sub-1ms | 6–8 weeks |
+| C | Full platform with SDKs (TS, Python, Java, Go) | sub-1ms cached | 16–24 weeks |
+
+## Rationale
+
+- Phase A: Lowest effort, fastest to market; works with any gateway
+- Phase B: Native integration; lower latency at gateway
+- Phase D: Edge-deployable; offline-capable
+- Phase C: Highest latency; requires SDK adoption
+
+## Consequences
+
+- Positive: Incremental value; can stop at any phase
+- Negative: Four phases to maintain; different integration paths

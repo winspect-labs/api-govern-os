@@ -1,0 +1,60 @@
+---
+title: Subscription-Based Authorization
+category: feature
+status: planned
+priority: P0
+owners: ["platform-backend-service"]
+last_updated: 2026-03-01
+tags: ["authorization", "subscription", "opa", "gateway"]
+---
+
+# Subscription-Based Authorization
+
+Enable runtime authorization enforcement without replacing customer authentication. Teams subscribe to APIs; authorization flows from the catalog.
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P0" />
+
+## Description
+
+**Strategic position:** We are NOT replacing your authentication. We are adding subscription-based authorization ON TOP of it.
+
+### Current State (Built)
+
+- Team-based subscription requests
+- Approval workflow with versioning
+- Permission selection
+- Rate limit configuration
+- ABAC-based access control
+
+### Phased Rollout (Planned)
+
+| Phase | Name | Latency | Effort |
+|-------|------|---------|--------|
+| A | External AuthZ REST API (`POST /v1/authz/check`) | 5–50ms | 4–6 weeks |
+| B | Gateway plugins (Kong, Envoy, AWS GW) | 5–50ms | 8–12 weeks |
+| C | Full platform with SDKs (TS, Python, Java, Go) | sub-1ms cached | 16–24 weeks |
+| D | OPA policy bundles (edge, offline-capable) | sub-1ms | 6–8 weeks |
+
+**Recommended order:** A → B → D → C
+
+### AuthZ Check API (Phase A)
+
+```
+POST /v1/authz/check
+Input:  { subject: { type, value }, resource: { apiId }, action }
+Output: { allowed, subscription, permissions[], rateLimit, decision }
+```
+
+### Supported Identity Types
+
+`OAUTH_CLIENT_ID`, `OAUTH_SUBJECT`, `MTLS_SUBJECT_DN`, `MTLS_SPIFFE_ID`, `API_KEY`, `AWS_IAM_ROLE_ARN`, `GCP_SERVICE_ACCOUNT`, `AZURE_MANAGED_IDENTITY`, `K8S_SERVICE_ACCOUNT`, `CUSTOM`
+
+## Repositories
+
+- `platform-backend-service` — AuthZ API, policy evaluation
+
+## Completion
+
+0% — Design complete. Implementation pending.

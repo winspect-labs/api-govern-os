@@ -1,0 +1,14 @@
+features:
+  - id: subscription-authz
+    name: Subscription-Based Authorization
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: External AuthZ REST API, OPA policy bundles, gateway plugins (Kong, Envoy), SDKs; does not replace customer auth
+    goal_ids:
+      - subscription-authz
+    links:
+      - label: Spec
+        url: /features/subscription-authz

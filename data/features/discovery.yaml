@@ -1,0 +1,16 @@
+features:
+  - id: k8s-discovery
+    name: K8s API Auto-Discovery
+    status: in-progress
+    priority: P0
+    completion: 40
+    repos:
+      - platform-backend-service
+      - winspect-api-discovery-agent
+      - api-management-ui
+    description: Discover APIs from Kubernetes services; runtime records, spec records, bulk import, manual mapping
+    goal_ids:
+      - automated-discovery
+    links:
+      - label: Spec
+        url: /features/k8s-discovery

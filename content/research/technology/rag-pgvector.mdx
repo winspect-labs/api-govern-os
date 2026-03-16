@@ -1,0 +1,28 @@
+---
+title: RAG with pgvector
+category: research
+last_updated: 2026-03-01
+sources: [pgvector-docs]
+---
+
+# RAG with pgvector
+
+## Summary
+
+We use PostgreSQL with the pgvector extension for vector similarity search. Embeddings from OpenAI `text-embedding-3-small` (1536 dimensions). HNSW index for fast approximate nearest neighbor search.
+
+## Chunking Strategy
+
+- **L1** — API metadata (name, version, description, team, tags)
+- **L2** — Endpoint chunks (HTTP method, path, summary, params, responses)
+- **L3/L4** (v2) — Schema chunks, example chunks
+
+## Alternatives Considered
+
+- **Managed vector stores** (Pinecone, Weaviate) — Higher cost ($40–100/month); we chose pgvector for ~$5–15/month with existing PostgreSQL
+- **Ollama** — Used for local dev; OpenAI in production for consistency
+
+## Implications
+
+- RAG data lives in isolated `platform_ai` schema
+- platform-backend proxies to platform-ai; never owns RAG entities

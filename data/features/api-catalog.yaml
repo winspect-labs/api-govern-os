@@ -1,0 +1,15 @@
+features:
+  - id: api-catalog
+    name: API Catalog
+    status: shipped
+    priority: P0
+    completion: 100
+    repos:
+      - api-management-ui
+      - platform-backend-service
+    description: API registration, OpenAPI spec management, team-based ownership, subscriptions, approval workflow, ABAC v2, mock server
+    goal_ids:
+      - core-platform
+    links:
+      - label: Spec
+        url: /features/api-catalog

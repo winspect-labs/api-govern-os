@@ -1,6 +1,7 @@
 {
   "index": "Dashboard",
-  "pet-catalog": "Pet Catalog",
-  "shopping-cart": "Shopping Cart",
-  "order-management": "Order Management"
+  "api-catalog": "API Catalog",
+  "k8s-discovery": "K8s Auto-Discovery",
+  "rag-search": "RAG Semantic Search",
+  "subscription-authz": "Subscription AuthZ"
 }

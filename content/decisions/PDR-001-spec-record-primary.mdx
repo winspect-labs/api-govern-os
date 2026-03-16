@@ -1,0 +1,27 @@
+---
+title: PDR-001 Spec Record Primary
+category: decision
+status: accepted
+last_updated: 2026-03-01
+---
+
+# PDR-001: Spec Record is Authoritative for Operations and RAG
+
+## Context
+
+We have two record types for APIs: spec records (design-time) and runtime records (runtime discovery). Operations parsing, RAG indexing, and mock server generation need a single source of truth.
+
+## Decision
+
+**Spec record is primary.** Operations parsing and RAG indexing always use the spec record. The runtime record is used only for service endpoint info and quick onboarding (bulk import).
+
+## Rationale
+
+- Spec record represents intended API (manual upload, GitHub, or runtime-detected)
+- Runtime record represents observed API (K8s discovery); may be orphaned or linked
+- Operations and RAG require semantic correctness; spec is authoritative
+
+## Consequences
+
+- Positive: Clear semantics; no ambiguity about which spec to use
+- Negative: Runtime record updates do not trigger RAG re-index; spec record updates do

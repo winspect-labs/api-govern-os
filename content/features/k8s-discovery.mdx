@@ -1,0 +1,50 @@
+---
+title: K8s API Auto-Discovery
+category: feature
+status: in-progress
+priority: P0
+owners: ["platform-backend-service", "winspect-api-discovery-agent", "api-management-ui"]
+last_updated: 2026-03-01
+tags: ["discovery", "kubernetes", "runtime-records", "bulk-import"]
+---
+
+# K8s API Auto-Discovery
+
+Discover APIs from Kubernetes services. Eliminate manual API registration by scanning customer clusters and registering runtime records.
+
+## Status
+
+<StatusBadge status="in-progress" /> <PriorityBadge priority="P0" />
+
+## Description
+
+The discovery system uses a **dual model**:
+
+- **Spec records** — Required for every API. Source: manual upload, GitHub (future), or runtime-detected (bulk import)
+- **Runtime records** — Optional. Source: K8s discovery agent. Start orphaned (`api_id = NULL`) until manual mapping or bulk import
+
+### Discovery Agent
+
+The [winspect-api-discovery-agent](https://github.com/winspect-labs/winspect-api-discovery-agent) is a lightweight, stateless pod deployed in customer K8s clusters:
+
+1. **Scan** — Lists services in configured namespaces
+2. **Probe** — Tries well-known OpenAPI endpoints (`/v3/api-docs`, `/openapi.json`, `/openapi.yaml`, `/swagger.json`)
+3. **Register** — Creates runtime records in the central Winspect API via `POST /discovery/runtime-records`
+
+Helm-deployed; configurable scan interval, namespaces, timeouts.
+
+### User Flows
+
+- **Bulk import** — When system is empty, create APIs from orphaned runtime records in one action
+- **Manual mapping** — Link an orphaned runtime record to an existing API
+- **Duplicate detection** — Metadata hash (SHA-256 of service_name:namespace:api_name:api_version) prevents duplicate runtime records
+
+## Repositories
+
+- `platform-backend-service` — Discovery API, runtime/spec record entities, bulk import, manual mapping
+- `winspect-api-discovery-agent` — K8s scanner, Helm chart (client-facing repo)
+- `api-management-ui` — Discovery dashboard, bulk import UI, manual mapping dialog
+
+## Completion
+
+~40% — Backend and agent in place. Bulk import UI and manual mapping dialog in progress.

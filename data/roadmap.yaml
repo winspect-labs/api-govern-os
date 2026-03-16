@@ -1,21 +1,35 @@
 # Timeline-based roadmap data
 # ===========================
-# FORK: Replace with your roadmap quarters and themes.
 # AGENTS: Align roadmap themes with goals and features. Update status as quarters complete.
 
 quarters:
   - id: Q1-2026
     label: Q1 2026
     themes:
-      - Ship pet catalog v1
-      - Complete shopping cart polish
-      - MVP launch
+      - K8s discovery MVP (bulk import, manual mapping)
+      - RAG semantic search polish
+      - Soft delete for APIs
     status: in-progress
 
   - id: Q2-2026
     label: Q2 2026
     themes:
-      - Guest checkout
-      - Order management
-      - Inventory alerts
+      - External AuthZ REST API
+      - GitHub spec sync integration
+      - Usage analytics foundation
+    status: planned
+
+  - id: Q3-2026
+    label: Q3 2026
+    themes:
+      - OPA policy bundles
+      - Gateway plugins (Kong, Envoy, AWS GW)
+      - Usage analytics per subscription
+    status: planned
+
+  - id: Q4-2026
+    label: Q4 2026
+    themes:
+      - SDKs (TS, Python, Java, Go)
+      - Enterprise readiness (audit, SLA)
     status: planned

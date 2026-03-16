@@ -106,15 +106,17 @@ entities:
       themes: { type: array, items: string }
       status: string
 
-# FORK: Replace with your product domains. Add/remove domains as needed.
 # AGENTS: Iterate domains, load each file, merge features. Use goal_ids to map features to goals.
 domains:
-  - id: catalog
-    file: data/features/catalog.yaml
-    description: Pet catalog, browse and search
-  - id: checkout
-    file: data/features/checkout.yaml
-    description: Shopping cart and checkout
-  - id: inventory
-    file: data/features/inventory.yaml
-    description: Inventory and order management
+  - id: api-catalog
+    file: data/features/api-catalog.yaml
+    description: API catalog, subscriptions, ABAC, mock server
+  - id: discovery
+    file: data/features/discovery.yaml
+    description: K8s runtime discovery, spec records, bulk import, manual mapping
+  - id: ai-search
+    file: data/features/ai-search.yaml
+    description: RAG semantic search for API discovery
+  - id: subscription-authz
+    file: data/features/subscription-authz.yaml
+    description: Subscription-based authorization enforcement (AuthZ API, OPA, gateway plugins)

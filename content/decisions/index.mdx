@@ -8,10 +8,10 @@ last_updated: 2026-03-01
 
 Product and architecture decision records (PDR/ADR). Capture the "why" behind key choices.
 
-## Format
+## Records
 
-Each decision includes:
-
-- **Context** — What prompted this?
-- **Decision** — What did we decide?
-- **Consequences** — What are the trade-offs?
+- [PDR-001: Spec Record Primary](/decisions/PDR-001-spec-record-primary) — Spec record authoritative for operations and RAG
+- [PDR-002: Dual Discovery Model](/decisions/PDR-002-dual-discovery-model) — Spec + runtime records; orphaned until manual action
+- [PDR-003: Subscription Identity](/decisions/PDR-003-subscription-identity) — One subscription per (identity, API) pair
+- [PDR-004: AuthZ Phased Rollout](/decisions/PDR-004-subscription-authz-phased) — External API → gateway → OPA → SDKs
+- [PDR-005: ABAC v2](/decisions/PDR-005-abac-v2) — Policy engine evaluation order

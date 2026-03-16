@@ -1,0 +1,15 @@
+features:
+  - id: rag-search
+    name: RAG Semantic Search
+    status: in-progress
+    priority: P1
+    completion: 70
+    repos:
+      - platform-backend-service
+      - api-management-ui
+    description: Natural language API discovery via vector embeddings (pgvector, OpenAI); semantic search
+    goal_ids:
+      - ai-discoverability
+    links:
+      - label: Spec
+        url: /features/rag-search

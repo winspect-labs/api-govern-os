@@ -8,19 +8,20 @@ last_updated: 2026-03-01
 
 ## Ideal Customer Profile (ICP)
 
-- **Company size:** 10–200 engineers
-- **Stage:** Series A–C, product-market fit achieved
-- **Stack:** Modern (Kubernetes, microservices, APIs)
-- **Pain:** Tool sprawl, integration complexity, slow deployments
+- **Company size:** 50–500 engineers
+- **Stage:** Growth-stage, API-first or platform-heavy
+- **Stack:** Kubernetes, microservices, OpenAPI/Swagger
+- **Pain:** API sprawl, no single inventory, authorization scattered, slow onboarding to internal APIs
 
 ## Personas
 
-### Dev Lead (Primary)
-- Owns delivery velocity and developer experience
-- Frustrated by fragmented tooling
-- Values simplicity and speed
+### Platform Engineer (Primary)
+- Owns internal developer experience and API governance
+- Frustrated by manual API registration and scattered authorization logic
+- Wants discovery that works (K8s, semantic search) and authorization that flows from the catalog
+- Values simplicity and integration with existing auth (Clerk, Auth0, custom)
 
-### Platform Engineer (Secondary)
-- Maintains internal tooling and infra
-- Wants fewer systems to operate
-- Cares about extensibility
+### API Owner / Team Lead (Secondary)
+- Owns one or more APIs consumed by other teams
+- Wants clear subscription workflow, approval, and visibility into who uses what
+- Cares about governance without becoming a bottleneck

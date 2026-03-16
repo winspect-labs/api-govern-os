@@ -6,13 +6,25 @@ last_updated: 2026-03-01
 
 # System Overview
 
-High-level architecture of Acme Platform. For implementation details, see per-repo documentation.
+High-level architecture of Winspect. For implementation details, see per-repo documentation.
 
 ## Components
 
-- **Frontend** — Next.js app, user-facing dashboard
-- **Backend** — API service, business logic, data persistence
-- **Worker** — Background jobs, async processing
+- **api-management-ui** — Next.js 14 app, Material UI, Clerk auth. Customer-facing API catalog, subscriptions, discovery dashboard, RAG search.
+- **platform-backend-service** — Spring Boot monorepo:
+  - **platform-backend-core** (port 8080) — API management, subscriptions, ABAC, discovery API, RAG proxy
+  - **platform-ai-core** (port 9090) — RAG service, vector embeddings, pgvector
+- **winspect-api-discovery-agent** — Lightweight Spring Boot service deployed in customer K8s clusters. Scans services, probes OpenAPI endpoints, registers runtime records via central API.
+- **api-govern-os** — This repo. Product knowledge base (vision, features, backlog, decisions).
+
+## Data Flow
+
+```
+api-management-ui ──► platform-backend-core ──► platform-ai-core (RAG)
+        │                      ▲
+        │                      │
+winspect-api-discovery-agent ──┘ (POST /discovery/runtime-records)
+```
 
 ## Sections
 

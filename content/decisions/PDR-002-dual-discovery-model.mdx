@@ -1,0 +1,27 @@
+---
+title: PDR-002 Dual Discovery Model
+category: decision
+status: accepted
+last_updated: 2026-03-01
+---
+
+# PDR-002: Dual Discovery Model (Spec + Runtime Records)
+
+## Context
+
+We need to support both design-time (GitHub, manual) and runtime (K8s) discovery of the same API without conflicts.
+
+## Decision
+
+**Separate spec records (required) and runtime records (optional).** Every API has exactly one spec record. An API may have zero or one runtime record. Runtime records start orphaned (`api_id = NULL`) until manual mapping or bulk import. Metadata hash (SHA-256 of service_name:namespace:api_name:api_version) prevents duplicate runtime records.
+
+## Rationale
+
+- Spec record = intended API; runtime record = observed API
+- Orphaned records stay unlinked until human action (no auto-linking)
+- Hash-based duplicate detection enables idempotent discovery
+
+## Consequences
+
+- Positive: Future-proof for GitHub integration; no conflicts between sources
+- Negative: Two record types to maintain; complexity in migration
