@@ -6,9 +6,17 @@ features:
     completion: 0
     repos:
       - platform-backend-service
-    description: External AuthZ REST API, OPA policy bundles, gateway plugins (Kong, Envoy), SDKs; does not replace customer auth
+    description: >
+      External AuthZ REST API (POST /v1/authz/check), OPA policy bundles, gateway plugins (Kong, Envoy), SDKs.
+      Does not replace customer auth — adds a governance enforcement layer on top.
+      The subscription model is extended to cover both API subscriptions (human teams → APIs) and
+      MCP server subscriptions (agent identities → MCP servers). AuthZ check endpoints serve both surfaces:
+      POST /v1/authz/check for API access, POST /v1/mcp-authz/check for MCP tool access.
     goal_ids:
       - subscription-authz
+      - mcp-governance
     links:
       - label: Spec
         url: /features/subscription-authz
+      - label: MCP Governance
+        url: /features/mcp-governance
