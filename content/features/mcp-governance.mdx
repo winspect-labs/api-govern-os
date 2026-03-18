@@ -1,0 +1,227 @@
+---
+title: MCP Server Governance
+category: feature
+status: planned
+priority: P1
+owners: ["platform-backend-service", "api-management-ui", "winspect-api-discovery-agent"]
+last_updated: 2026-03-18
+tags: ["mcp", "governance", "agents", "linting", "authorization", "rate-limits", "discovery"]
+---
+
+# MCP Server Governance
+
+API sprawl was the problem of the last decade. **MCP server sprawl is the problem of the next two years.**
+
+As organizations adopt AI agents, they will deploy MCP servers at pace — one per team, one per service, one per product surface. Without a governance layer, MCP servers will suffer every pathology that plagued APIs: no single inventory, no ownership, no quality standards, runaway agent access, and no way to audit who is calling what.
+
+Winspect closes this before it begins. The same governance model that tamed API sprawl now applies to MCP servers.
+
+---
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P1" />
+
+**Completion: 0%** — Design phase. Goal: `mcp-governance` active, target Q1 2027.
+
+---
+
+## The MCP Sprawl Problem
+
+Every team that builds an AI feature ships an MCP server. By mid-2027, a 200-engineer company will have:
+
+- 30–50 MCP servers across teams, most unregistered
+- No consistent tool naming conventions — agents get confused by inconsistent schema
+- No quality bar — half the tool descriptions say "does stuff"
+- No access control — any agent in the org can call any MCP server
+- No visibility into which agent is hammering which MCP server at 2am
+- No one owns most of them
+
+This is API sprawl in 2018. We already know where it ends.
+
+---
+
+## Solution: MCP Governance as a First-Class Domain
+
+Winspect extends its governance model to cover MCP servers with five interconnected capabilities:
+
+### 1. MCP Server Catalog & Registry
+
+A first-class registry for MCP servers alongside the API catalog. Same UI, same mental model.
+
+- Register an MCP server with name, description, transport URL, and tool manifest
+- Assign team ownership (same ABAC model as APIs)
+- Lifecycle management: active, deprecated, experimental
+- Unified inventory: search and browse both REST APIs and MCP servers in one place
+
+**Backend endpoints:**
+- `GET /mcp-management/servers` — list with filtering by team, status, quality score
+- `POST /mcp-management/servers` — register with manifest upload or URL fetch
+- `GET /mcp-management/servers/{id}` — detail with tools list, subscribers, quality report
+- `PATCH /mcp-management/servers/{id}` — update metadata, deprecate
+- `DELETE /mcp-management/servers/{id}` — soft delete
+
+### 2. Team Ownership Model
+
+Every MCP server is owned by a team. Same ownership model as APIs.
+
+- Owner team: MANAGE permission (update, deprecate, approve subscriptions)
+- Subscriber agents: CALL permission (invoke tools within approved scope)
+- ABAC policies cover `mcp_server` resource type
+- Orphaned servers (no owner) are flagged; org admins must reassign
+
+### 3. Linting & Quality Control
+
+Static analysis runs on every tool manifest at registration time and on demand.
+
+**Lint rules:**
+
+| Rule | Severity | Description |
+|------|----------|-------------|
+| `tool-name-snake-case` | Error | Tool name must be `snake_case` |
+| `tool-name-verb-prefix` | Warning | Tool name should start with a verb (`get_`, `list_`, `create_`, `delete_`, `check_`) |
+| `tool-description-length` | Error | Description must be ≥20 characters |
+| `tool-description-no-boilerplate` | Warning | Must not start with "A tool that..." or "This tool..." |
+| `input-schema-typed` | Error | All `inputSchema` properties must declare a `type` |
+| `input-schema-described` | Warning | All `inputSchema` properties should have a `description` |
+| `required-fields-typed` | Error | All `required` fields must have a `type` annotation |
+| `no-secrets-in-description` | Error | Tool description must not contain tokens resembling secrets (hex-40, base64-40+) |
+| `error-hygiene` | Warning | Error messages must not leak internal stack traces |
+
+**Quality score (0–100):** Weighted pass rate across all rules. Displayed as badge in catalog. Below 60 triggers a warning banner. Below 40 blocks registration.
+
+### 4. Agent Subscription & Authorization
+
+Agents subscribe to MCP servers using the same subscription model as API access — extended for agent identities.
+
+**Agent identity:** A non-human subscriber with `client_id` + `client_secret`. Owned by a team. Registered once, reused across subscriptions.
+
+**Subscription scopes:**
+- `read_tools` — can introspect the tool manifest (list tools, read descriptions)
+- `call_tools` — can invoke tools within the approved set
+- `admin_tools` — full access including metadata management (owner team only)
+
+**Approval workflow:**
+1. Agent registers an identity (team member creates it, gets `client_id` + one-time `client_secret`)
+2. Agent subscribes to an MCP server, requests scope
+3. MCP server's owner team approves or rejects (with optional scope restriction)
+4. Approved agent gets a scoped token for that MCP server
+5. At tool invocation: MCP server calls `POST /v1/mcp-authz/check` before executing
+
+**AuthZ check API:**
+
+```
+POST /v1/mcp-authz/check
+{
+  "agent_client_id": "agt_abc123",
+  "mcp_server_id": "mcp_xyz789",
+  "tool_name": "list_orders",
+  "required_scope": "call_tools"
+}
+
+→ { "allowed": true, "reason": "approved_subscription", "subscription_id": "sub_..." }
+→ { "allowed": false, "reason": "rate_limit_exceeded", "retry_after_seconds": 42 }
+→ { "allowed": false, "reason": "no_approved_subscription" }
+```
+
+Stateless, OPA-backed, <10ms p99 on warm cache.
+
+### 5. Rate Limits & Usage Quotas
+
+Per-agent, per-subscription rate limiting prevents runaway agent loops.
+
+- Configurable at MCP server level (global cap) and per-subscription (per-agent cap)
+- Windows: per-minute, per-hour, per-day (independently configurable)
+- Enforcement at the authz check layer — no limit exceeded = no tool call
+- Usage dashboard: per-agent consumption, top tools by call volume, quota utilization
+
+---
+
+## Extending the Subscription Entity
+
+The core change is a schema extension to the existing `Subscription` entity:
+
+```
+Subscription {
+  subscriber_type: TEAM | AGENT          ← new: AGENT type
+  resource_type:   API | MCP_SERVER      ← new: MCP_SERVER type
+  resource_id:     string                ← API id or MCP server id
+  scope:           string[]              ← for MCP: read_tools, call_tools, admin_tools
+  ...existing fields unchanged...
+}
+
+AgentIdentity {
+  id:              string
+  client_id:       string (generated)
+  hashed_secret:   string (bcrypt)
+  name:            string
+  description:     string
+  owning_team_id:  string
+  status:          active | suspended
+  created_at:      timestamp
+}
+```
+
+Human teams subscribing to APIs are unchanged. This is purely additive.
+
+---
+
+## K8s MCP Server Discovery
+
+The `winspect-api-discovery-agent` is extended to detect MCP servers in customer clusters.
+
+**Detection heuristics (any one triggers discovery):**
+1. Pod/service label `app.winspect.io/type=mcp-server`
+2. Service annotation `winspect.io/mcp-transport-url` pointing to Streamable HTTP endpoint
+3. ConfigMap with key `winspect-mcp-manifest` containing tool manifest JSON
+
+Discovered servers surface as orphaned runtime records, following the same bulk-import and manual-mapping workflow as REST API discovery.
+
+---
+
+## Architecture
+
+```
+AI Agent
+    │  calls tool
+    ▼
+┌─────────────────────────────────┐
+│  Customer MCP Server            │  (team-owned, registered in Winspect)
+│  (any language/framework)       │
+└────────────┬────────────────────┘
+             │  POST /v1/mcp-authz/check (before every tool call)
+             ▼
+┌─────────────────────────────────┐
+│  platform-backend-service       │  Spring Boot — MCP authz, rate limiting, OPA
+│  /mcp-management/*              │
+│  /v1/mcp-authz/check            │
+└────────────┬────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────┐
+│  api-management-ui              │  Next.js — MCP catalog, linting UI,
+│  /mcp-servers/*                 │  subscription management, quality dashboard
+└─────────────────────────────────┘
+```
+
+---
+
+## Backlog
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| bl-033 | Extend subscription entity for MCP and agent identities | P0 |
+| bl-034 | MCP server catalog registry UI | P0 |
+| bl-035 | MCP server team ownership model and ABAC roles | P1 |
+| bl-036 | MCP server linting engine | P1 |
+| bl-037 | MCP server quality score dashboard | P2 |
+| bl-038 | Agent identity registration and subscription workflow | P1 |
+| bl-039 | External AuthZ API for MCP tool access | P1 |
+| bl-040 | Per-agent rate limiting for MCP tool invocations | P2 |
+| bl-041 | K8s MCP server auto-discovery | P2 |
+
+---
+
+## Decision Record
+
+See [PDR-007](/decisions/PDR-007-mcp-governance) for the architectural decision record.
