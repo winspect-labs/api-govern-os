@@ -33,11 +33,17 @@ quarters:
       - OPA policy bundles
       - Gateway plugins (Kong, Envoy, AWS GW)
       - Usage analytics per subscription
+      - winspect-mcp-server bootstrap and core API catalog tools (bl-022, bl-023)
+      - MCP subscription and org tools (bl-024, bl-025)
+      - winspect-cli bootstrap and API management commands (bl-029, bl-030)
+      - CLI subscription and org commands (bl-031, bl-032)
     status: planned
 
   - id: Q4-2026
     label: Q4 2026
     themes:
-      - SDKs (TS, Python, Java, Go)
+      - MCP publish_api tool with destructive annotations (bl-026)
+      - MCP server OAuth 2.0 for Claude Connector Directory (bl-027)
+      - Claude Connector Directory submission (bl-028)
       - Enterprise readiness (audit, SLA)
     status: planned

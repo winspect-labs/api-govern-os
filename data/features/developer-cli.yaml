@@ -1,0 +1,21 @@
+features:
+  - id: developer-cli
+    name: Winspect CLI (winspect-cli)
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - winspect-cli
+    description: >
+      TypeScript CLI tool (Node.js, distributed via npm) for interacting with Winspect from the
+      terminal and CI/CD pipelines. Commands cover the full API lifecycle: publish, list, inspect,
+      search, manage subscriptions, and check authorization. Configures via ~/.winspect/config
+      (org ID + API key) or environment variables. Supports JSON and table output formats.
+    goal_ids:
+      - agentic-integration
+      - enterprise-readiness
+    links:
+      - label: Spec
+        url: /features/developer-cli
+      - label: PDR-006
+        url: /decisions/PDR-006-agentic-integration

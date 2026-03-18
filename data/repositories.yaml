@@ -44,3 +44,26 @@ repositories:
       - MDX
     status: active
     url: https://github.com/nakulshukla08/api-govern-os
+
+  - id: winspect-mcp-server
+    name: winspect-mcp-server
+    purpose: Remote MCP server exposing Winspect as AI-agent-callable tools (list/get/search APIs, subscriptions, org info, publish). Streamable HTTP transport. Foundation for the Claude Connector Directory submission.
+    tech:
+      - TypeScript
+      - Node.js
+      - "@modelcontextprotocol/sdk"
+      - Express
+      - Docker
+    status: planned
+    url: https://github.com/winspect-labs/winspect-mcp-server
+
+  - id: winspect-cli
+    name: winspect-cli
+    purpose: Developer CLI (npm package) for publishing APIs, listing subscribers, searching, and managing subscriptions from the terminal or CI/CD pipelines.
+    tech:
+      - TypeScript
+      - Node.js
+      - oclif
+      - npm
+    status: planned
+    url: https://github.com/winspect-labs/winspect-cli

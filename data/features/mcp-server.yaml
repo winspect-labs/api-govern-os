@@ -1,0 +1,41 @@
+features:
+  - id: mcp-server
+    name: Winspect MCP Server
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - winspect-mcp-server
+    description: >
+      Remote Model Context Protocol (MCP) server that exposes Winspect capabilities as AI-agent-callable tools.
+      Enables any MCP-compatible AI agent (Claude, OpenAI Agents SDK, Cursor, etc.) to discover APIs,
+      query subscriptions, inspect org/team structure, and publish APIs programmatically.
+      Auth via org API key or personal access token. Deployed as a Streamable HTTP server.
+    goal_ids:
+      - agentic-integration
+      - ai-discoverability
+    links:
+      - label: Spec
+        url: /features/mcp-server
+      - label: PDR-006
+        url: /decisions/PDR-006-agentic-integration
+
+  - id: claude-connector
+    name: Claude Connector (Anthropic Directory)
+    status: planned
+    priority: P2
+    completion: 0
+    repos:
+      - winspect-mcp-server
+    description: >
+      Official Winspect connector submitted to the Anthropic Claude Connectors Directory.
+      Built on the MCP server with OAuth 2.0 auth so Claude.ai users can connect Winspect
+      directly from claude.ai without any self-hosted setup. Requires Anthropic review and approval.
+    goal_ids:
+      - agentic-integration
+      - enterprise-readiness
+    links:
+      - label: Spec
+        url: /features/mcp-server
+      - label: Anthropic Connector Submission
+        url: https://claude.com/docs/connectors/building/submission

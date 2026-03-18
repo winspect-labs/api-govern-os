@@ -344,3 +344,245 @@ items:
     links:
       - label: Spec
         url: /features/api-change-notifications
+
+  # ── MCP Server ──────────────────────────────────────────────────────────────
+
+  - id: bl-022
+    title: Bootstrap winspect-mcp-server repo (TypeScript, MCP SDK, Streamable HTTP)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Create winspect-mcp-server TypeScript repo using the official @modelcontextprotocol/sdk.
+      Set up Streamable HTTP transport (Express or Fastify), environment config (ORG_ID, API_KEY /
+      PERSONAL_ACCESS_TOKEN, PLATFORM_BASE_URL), and Docker packaging. Wire basic health check.
+      This is the foundation all MCP tools are built on.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-023
+    title: MCP tools — API catalog (list_apis, get_api, search_apis, get_api_operations)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Implement MCP tools that proxy to platform-backend-service:
+      list_apis (GET /api-management/apis, filterable by name/tag/status),
+      get_api (GET /api-management/apis/{apiId}, returns metadata + spec),
+      get_api_operations (GET /api-management/apis/{apiId}/operations),
+      search_apis (POST /platform-ai/search, wraps RAG semantic search).
+      All tools accept org_id + api_key in server config; no per-call auth needed.
+    goal_ids:
+      - agentic-integration
+      - ai-discoverability
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-024
+    title: MCP tools — subscriptions and authorization (list_subscriptions, get_subscription, check_authz, list_subscribers)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: >
+      Implement MCP tools:
+      list_subscriptions (list subscriptions for caller's org/team),
+      get_subscription (get subscription detail + status),
+      list_subscribers (get all subscriber teams for a given API),
+      check_authz (POST /v1/authz/check — check if a team has permission to an API).
+      Enables AI agents to reason about who can access what.
+    goal_ids:
+      - agentic-integration
+      - subscription-authz
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-025
+    title: MCP tools — org and team info (get_org, list_teams, get_team, list_team_members)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 8
+    description: >
+      Implement MCP tools:
+      get_org (get org name, settings, API key status),
+      list_teams (list all teams in the org with member counts),
+      get_team (get team details including member list),
+      list_team_members (get members of a specific team with roles).
+      Enables AI agents to understand org structure when answering governance questions.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-026
+    title: MCP tool — publish_api (create or update API from spec)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 6
+    description: >
+      Implement destructive MCP tool publish_api: accepts api_name, version, description,
+      spec (OpenAPI YAML/JSON string), team_id. Proxies to POST /api-management/apis.
+      Tool annotation: destructiveHint=true. Requires caller confirmation prompt.
+      Enables AI agents and CI pipelines to register APIs programmatically via MCP.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-027
+    title: MCP server — OAuth 2.0 auth for Claude Connector Directory submission
+    status: proposed
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 5
+    description: >
+      Implement OAuth 2.0 authorization code flow on the MCP server so it can be submitted
+      to Anthropic's Claude Connectors Directory. Requires: /oauth/authorize, /oauth/token,
+      /oauth/callback endpoints; PKCE support; scoped permissions (read:apis, write:apis,
+      read:subscriptions, read:org). Store token-to-org mapping in the MCP server's own
+      lightweight persistence layer. See Anthropic submission docs for exact requirements.
+    goal_ids:
+      - agentic-integration
+      - enterprise-readiness
+    feature_id: claude-connector
+    links:
+      - label: Spec
+        url: /features/mcp-server
+      - label: Anthropic Submission Docs
+        url: https://claude.com/docs/connectors/building/submission
+
+  - id: bl-028
+    title: Submit Winspect connector to Anthropic Claude Connectors Directory
+    status: proposed
+    priority: P3
+    ice:
+      impact: 9
+      confidence: 6
+      ease: 4
+    description: >
+      After OAuth flow is implemented (bl-027), prepare and submit Winspect MCP server
+      to Anthropic's Claude Connectors Directory. Requires: privacy policy URL, tool annotations
+      (readOnlyHint / destructiveHint), connector icon, description, and Anthropic review.
+      This is the primary distribution channel for non-technical Claude.ai users.
+    goal_ids:
+      - agentic-integration
+    feature_id: claude-connector
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  # ── Developer CLI ────────────────────────────────────────────────────────────
+
+  - id: bl-029
+    title: Bootstrap winspect-cli repo (TypeScript, oclif, npm distribution)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: >
+      Create winspect-cli using oclif (battle-tested Node.js CLI framework used by Heroku/Salesforce).
+      Set up monorepo structure, TypeScript config, npm publish pipeline. Implement
+      `winspect auth login` (prompts org ID + API key, saves to ~/.winspect/config.json)
+      and `winspect auth whoami`. All subsequent commands read from config or
+      WINSPECT_ORG_ID / WINSPECT_API_KEY env vars for CI use.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-030
+    title: CLI commands — API management (apis:list, apis:get, apis:publish, apis:search)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Implement core API commands:
+      winspect apis:list [--status <s>] [--team <id>] [--output json|table],
+      winspect apis:get <apiId> [--spec] (--spec flag dumps raw OpenAPI spec),
+      winspect apis:publish --name <n> --version <v> --spec-file <path> [--team <id>]
+        (multipart POST to /api-management/apis; prints created API ID),
+      winspect apis:search <query> (semantic search via RAG endpoint).
+      Target: developers can script API publishing in CI pipelines.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-031
+    title: CLI commands — subscriptions and subscribers (subscriptions:list, apis:subscribers)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 7
+    description: >
+      Implement subscription commands:
+      winspect subscriptions:list [--status pending|approved|rejected] [--output json|table],
+      winspect apis:subscribers <apiId> [--output json|table]
+        (lists all subscriber teams with permission levels and subscription status).
+      Enables API owners to audit who has access to their APIs from the terminal.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-032
+    title: CLI commands — org and team management (orgs:info, teams:list, teams:members)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 6
+      confidence: 8
+      ease: 8
+    description: >
+      Implement org/team commands:
+      winspect orgs:info (show org name, ID, API key status),
+      winspect teams:list [--output json|table],
+      winspect teams:members <teamId> [--output json|table].
+      Useful for scripted org auditing and onboarding automation.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli

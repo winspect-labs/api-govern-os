@@ -5,5 +5,7 @@
   "rag-search": "RAG Semantic Search",
   "subscription-authz": "Subscription AuthZ",
   "production-launch": "Production Launch",
-  "api-change-notifications": "API Change Notifications"
+  "api-change-notifications": "API Change Notifications",
+  "mcp-server": "MCP Server & Claude Connector",
+  "developer-cli": "Developer CLI"
 }

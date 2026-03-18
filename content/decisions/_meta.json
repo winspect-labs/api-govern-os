@@ -4,5 +4,6 @@
   "PDR-002-dual-discovery-model": "PDR-002: Dual Discovery Model",
   "PDR-003-subscription-identity": "PDR-003: Subscription Identity",
   "PDR-004-subscription-authz-phased": "PDR-004: AuthZ Phased Rollout",
-  "PDR-005-abac-v2": "PDR-005: ABAC v2"
+  "PDR-005-abac-v2": "PDR-005: ABAC v2",
+  "PDR-006-agentic-integration": "PDR-006: Agentic Integration"
 }
