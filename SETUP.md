@@ -37,8 +37,10 @@ Replace the example data with your product:
 
 ## 4. Deploy to Vercel
 
-1. Import your fork in [Vercel](https://vercel.com)
+1. Import **your fork** in [Vercel](https://vercel.com/new) — select `YOUR_ORG/api-govern-os`, not the original repo
 2. Deploy. The default build command (`npm run build`) includes the Pagefind postbuild for search.
+
+**Fork showing the original's site?** See [docs/VERCEL_FORK_DEPLOYMENT.md](docs/VERCEL_FORK_DEPLOYMENT.md) for troubleshooting.
 
 ### Optional: Enable Auth (Private Deployments)
 
