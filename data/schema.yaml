@@ -126,3 +126,9 @@ domains:
   - id: api-change-notifications
     file: data/features/api-change-notifications.yaml
     description: Notify API subscribers on spec changes via UI, email, and Slack; changelog and release notes on updates
+  - id: mcp-server
+    file: data/features/mcp-server.yaml
+    description: Remote MCP server exposing Winspect as a set of AI-agent-callable tools; Claude connector for the official Anthropic directory
+  - id: developer-cli
+    file: data/features/developer-cli.yaml
+    description: winspect-cli — TypeScript CLI for publishing APIs, listing subscribers, searching, and managing subscriptions from the terminal or CI/CD

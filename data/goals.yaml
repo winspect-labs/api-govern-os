@@ -39,3 +39,9 @@ goals:
     description: Multi-tenant hardening, audit trails, SLA guarantees
     status: active
     target_date: Q4 2026
+
+  - id: agentic-integration
+    title: Agentic Integration & Developer Tooling
+    description: Make Winspect programmable and accessible from AI agent workflows and developer toolchains via MCP server, Claude connector, and CLI
+    status: active
+    target_date: Q3 2026
