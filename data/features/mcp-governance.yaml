@@ -1,0 +1,103 @@
+features:
+  - id: mcp-server-catalog
+    name: MCP Server Catalog & Registry
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - api-management-ui
+      - platform-backend-service
+    description: >
+      A first-class registry for MCP servers alongside the API catalog. Teams register MCP servers
+      with metadata (name, description, transport URL, tool manifest), assign team ownership,
+      and manage lifecycle (active, deprecated, experimental). Discovery surfaces MCP servers
+      to agents and developers in the same unified inventory as REST APIs.
+    goal_ids:
+      - mcp-governance
+      - agentic-integration
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: mcp-server-linting
+    name: MCP Server Linting & Quality Control
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      Static analysis and quality scoring for registered MCP servers. Validates tool descriptions
+      (length, clarity, actionability), input schema completeness (type annotations, required fields,
+      descriptions), naming conventions (snake_case tool names, verb-prefixed), and security properties
+      (no secrets in tool descriptions, proper error message hygiene). Produces a quality score (0–100)
+      and surfaced lint warnings/errors in the catalog UI. Blocks registration of critically non-compliant servers.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: mcp-subscription-authz
+    name: MCP Subscription & Agent Authorization
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - platform-backend-service
+      - api-management-ui
+    description: >
+      Extend the subscription model so that agents (not just human teams) can subscribe to MCP servers.
+      An agent identity (client_id + secret or JWT) requests access to a registered MCP server.
+      A platform team member approves, assigns permission scope (read_tools, call_tools, admin_tools),
+      and the platform enforces it at the MCP gateway layer. The external AuthZ API
+      (POST /v1/mcp-authz/check) lets the MCP server enforce at tool invocation time.
+      Mirrors subscription-based authorization for APIs — same model, new surface.
+    goal_ids:
+      - mcp-governance
+      - subscription-authz
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: mcp-rate-limits
+    name: MCP Server Rate Limits & Usage Quotas
+    status: planned
+    priority: P2
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      Per-agent, per-subscription rate limiting for MCP tool invocations. Configurable at the
+      MCP server level (global cap) and per-subscription (per-agent cap). Quota windows: per-minute,
+      per-hour, per-day. Integrates with the usage analytics subsystem to track consumption.
+      Exposes a rate-limit-exceeded signal agents can reason about. Essential for preventing
+      runaway agent loops from hammering internal services.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: mcp-k8s-discovery
+    name: K8s MCP Server Discovery
+    status: planned
+    priority: P2
+    completion: 0
+    repos:
+      - winspect-api-discovery-agent
+      - platform-backend-service
+    description: >
+      Extend the K8s discovery agent to detect deployed MCP servers in customer clusters.
+      Heuristics: pods/services with label app.winspect.io/type=mcp-server, port annotations
+      for Streamable HTTP transport, or ConfigMap entries declaring MCP tool manifests.
+      Discovered MCP servers surface as orphaned runtime records in the catalog, following
+      the same bulk-import and manual-mapping workflow as REST API discovery.
+    goal_ids:
+      - mcp-governance
+      - automated-discovery
+    links:
+      - label: Spec
+        url: /features/mcp-governance

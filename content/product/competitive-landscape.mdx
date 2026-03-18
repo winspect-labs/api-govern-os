@@ -1,12 +1,12 @@
 ---
 title: Competitive Landscape
 category: product
-last_updated: 2026-03-01
+last_updated: 2026-03-18
 ---
 
 # Competitive Landscape
 
-## Key Competitors
+## API Governance Competitors
 
 | Competitor | Strength | Weakness | Our Edge |
 |------------|----------|----------|----------|
@@ -14,7 +14,45 @@ last_updated: 2026-03-01
 | Apigee (Google) | Enterprise, analytics | Heavy, complex, expensive | Lighter; developer-first; agent-accessible |
 | AWS API Gateway | Scale, AWS integration | Vendor lock-in; governance limited | Platform-agnostic; works with any gateway |
 | Backstage | Developer portal, catalog | Catalog is manual; no authz enforcement | Auto-discovery; subscription-based authz |
+| Stoplight | OpenAPI design, linting | Design-time only; no runtime governance | Runtime authz enforcement; K8s discovery |
+
+---
+
+## MCP Governance — Emerging Space (No Direct Competitors As of Q1 2026)
+
+There are **no established MCP governance platforms** as of March 2026. The space is open. This is both the opportunity and the risk.
+
+**What exists today in adjacent spaces:**
+
+| Adjacent Tool | What It Does | Why It's Not MCP Governance |
+|---------------|-------------|----------------------------|
+| Anthropic MCP Inspector | Debug and test MCP servers locally | Dev tooling only; no catalog, no authz, no org management |
+| MCP Hub / community registries | Public directory of open-source MCP servers | No governance, no access control, no enterprise features |
+| Internal developer portals (Backstage) | Software catalog including services | No MCP-specific model; no agent identity; no authz check API |
+| API gateways (Kong, Apigee) | Proxy and policy for REST/gRPC | Not designed for MCP protocol; no tool-level authz |
+
+**The gap:** No tool today lets an organization register MCP servers, assign ownership, enforce access control for agents, lint tool quality, or set rate limits per agent subscription. Winspect will be the first to do this end-to-end.
+
+---
 
 ## Positioning
 
-We position as the **API governance layer**—unified inventory, subscription-based authorization, and AI-powered discovery. Best for platform teams that run Kubernetes, have many internal APIs, and want governance without replacing existing auth or gateways.
+### API Governance Positioning
+
+"The API governance layer for platform teams running Kubernetes." Unified inventory, subscription-based authorization, K8s auto-discovery, RAG-powered search. Augments existing auth and gateways — does not replace them. Best for platform teams at growth-stage companies with 50–500 engineers.
+
+### MCP Governance Positioning (2027+)
+
+"The only platform that governs both REST APIs and MCP servers with the same model." As organizations ship more AI agents, they will need a governance layer for MCP servers. No one else addresses this today. We do — using the subscription model we already built for APIs, extended to agent identities.
+
+---
+
+## Competitive Moats
+
+1. **Unified model.** API and MCP governance from one platform, one subscription entity, one authz model. Competitors addressing either side alone will have a harder time unifying.
+
+2. **K8s discovery for both surfaces.** The discovery agent extends to MCP servers. Competing platforms that start from API management will need to build discovery from scratch.
+
+3. **Agent-accessible by design.** Winspect is itself MCP-accessible (the Winspect MCP server). This means agents can introspect the governance platform they are governed by — a recursive property competitors will have to intentionally build.
+
+4. **First-mover in MCP governance.** Being first in an open category with no incumbent means we define the vocabulary, the standards, and the benchmark.

@@ -1,21 +1,48 @@
 ---
 title: Value Proposition
 category: product
-last_updated: 2026-03-01
+last_updated: 2026-03-18
 ---
 
 # Value Proposition
 
 ## Core Principle: Augment, Don't Replace
 
-We are **not** replacing your authentication. We are adding subscription-based authorization **on top** of it. Teams subscribe to APIs and get governance—rate limits, permissions, audit—without ripping out Clerk, Auth0, or custom auth.
+Winspect does not replace your authentication, gateways, or deployment pipelines. It adds a governance enforcement layer on top of existing infrastructure. This applies equally to API access (via Clerk, Auth0, or custom auth) and to MCP server access (via agent tokens). Teams subscribe; governance flows from the catalog.
+
+---
 
 ## Core Value Props
 
-1. **Single API inventory** — One place for all APIs, whether manually registered or discovered from Kubernetes. No more scattered spreadsheets or tribal knowledge.
+### 1. Single Inventory for All Programmable Interfaces
 
-2. **Subscription-based authorization** — Teams request access; approvers grant it. Authorization flows from the catalog. No custom middleware per API.
+One place for all APIs and MCP servers — whether manually registered, discovered from Kubernetes, or found via K8s MCP server detection. No spreadsheets, no tribal knowledge, no "ask the team that built it."
 
-3. **Discover without hunting** — Semantic search ("Find APIs that handle user authentication") instead of keyword matching. RAG-powered, natural language.
+### 2. Subscription-Based Authorization That Extends to Agents
 
-4. **Agent-accessible** — Product knowledge lives in a structured repo (this one). Agents read it before implementing; humans review. The specification and the implementation share a lifecycle.
+Teams subscribe to APIs. Agents subscribe to MCP servers. The same approval workflow, the same permission model, the same enforcement API. `POST /v1/authz/check` for API access; `POST /v1/mcp-authz/check` for MCP tool access. Authorization is not an afterthought — it is the product.
+
+### 3. Quality Control Before Interfaces Go Live
+
+Winspect lints both REST API specs (OpenAPI) and MCP server tool manifests before they are published. Naming conventions, description quality, schema completeness, and security hygiene are checked and scored. A quality score (0–100) surfaces in the catalog and blocks critically non-compliant registrations.
+
+### 4. Discover Without Hunting
+
+Semantic search ("Find APIs that handle user authentication") via RAG/pgvector. Natural language queries return ranked results from both the API catalog and the MCP server catalog. Engineers stop hunting through wikis; agents stop calling the wrong tool.
+
+### 5. Governance That Grows With AI Adoption
+
+As organizations adopt more AI agents, the number of agent identities calling internal services grows. Winspect's per-agent rate limiting, subscription scopes (`read_tools`, `call_tools`), and audit trail ensure that agent proliferation does not create a governance vacuum.
+
+### 6. Agent-Accessible by Design
+
+Winspect itself is MCP-accessible. Any Claude, Cursor, or custom agent can query the catalog, check subscriptions, and inspect org structure via the Winspect MCP server. Product knowledge lives in a structured repo (this one). Agents read it before implementing; humans review.
+
+---
+
+## What Winspect Is Not
+
+- Not an API gateway — it does not proxy traffic
+- Not an authentication service — it does not issue JWTs or manage identity
+- Not a developer portal replacement — it is the governance layer that a portal can surface
+- Not an agent orchestration platform — it governs agent access, not agent logic
