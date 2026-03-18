@@ -1,0 +1,149 @@
+---
+title: Winspect MCP Server & Claude Connector
+category: feature
+status: planned
+priority: P1
+owners: ["winspect-mcp-server"]
+last_updated: 2026-03-18
+tags: ["mcp", "ai-agents", "claude", "agentic", "integration", "oauth"]
+---
+
+# Winspect MCP Server & Claude Connector
+
+Expose Winspect as a set of AI-agent-callable tools via the [Model Context Protocol (MCP)](https://modelcontextprotocol.io). Any MCP-compatible AI agent — Claude, OpenAI Agents SDK, Cursor, Copilot, or custom agents — can connect to Winspect and use its API catalog, subscriptions, and org management directly inside agentic workflows.
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P1" />
+
+**Completion: 0%** — Design phase. No implementation started. All backlog items are `proposed`.
+
+---
+
+## Strategic Context
+
+The API governance market is converging on a critical insight: **AI agents are the new API consumers**. Teams now use Claude, Cursor, or custom agents to answer questions like:
+
+- *"Which APIs does my org expose and which are deprecated?"*
+- *"What APIs does the payments team own?"*
+- *"Is my team subscribed to the inventory API? What permission level do we have?"*
+- *"Publish this OpenAPI spec to the catalog."*
+
+Without a programmatic integration layer, Winspect can only answer these questions through a browser. The MCP server makes Winspect a first-class participant in agentic workflows, turning the API catalog into a live knowledge source any AI can query.
+
+MCP reached 97M monthly SDK downloads by February 2026 and is adopted by Anthropic, OpenAI, Google, Microsoft, and Amazon. This is the standard — not a bet.
+
+---
+
+## Architecture
+
+```
+AI Agent (Claude, Cursor, etc.)
+        │
+        │  JSON-RPC 2.0 over Streamable HTTP
+        ▼
+┌─────────────────────────────┐
+│    winspect-mcp-server      │  TypeScript / Node.js
+│    @modelcontextprotocol/sdk│
+│    Express (HTTP transport) │
+└─────────┬───────────────────┘
+          │  REST (API key or PAT)
+          ▼
+┌─────────────────────────────┐
+│  platform-backend-service   │  Spring Boot 3.x
+│  (port 8080 / hosted URL)   │
+└─────────────────────────────┘
+```
+
+**Transport**: Streamable HTTP (production standard). Stdio available for local dev.
+
+**Auth**: Two modes:
+1. **Org API key** (`X-API-Key` header) — for automated/CI use
+2. **Personal Access Token** — for per-user access (inherits ABAC permissions)
+
+For the **Claude Connector Directory** submission, OAuth 2.0 authorization code flow (PKCE) is added on top so Claude.ai users can connect Winspect without managing keys manually.
+
+---
+
+## MCP Tools
+
+### API Catalog Tools
+
+| Tool | Description | Destructive |
+|------|-------------|-------------|
+| `list_apis` | List APIs in the org. Filterable by `name`, `status`, `team_id`, `tag`. | No |
+| `get_api` | Get full API details including metadata and raw OpenAPI spec. | No |
+| `get_api_operations` | List all parsed operations (method + path) for an API. | No |
+| `search_apis` | Semantic search via RAG — finds APIs by natural language query. | No |
+
+### Subscription & Authorization Tools
+
+| Tool | Description | Destructive |
+|------|-------------|-------------|
+| `list_subscriptions` | List subscriptions for the caller's org or team. Filterable by status. | No |
+| `get_subscription` | Get subscription detail including status and permission level. | No |
+| `list_subscribers` | List all subscriber teams for a given API with their permission levels. | No |
+| `check_authz` | Check if a team has a specific permission level on an API. | No |
+
+### Org & Team Tools
+
+| Tool | Description | Destructive |
+|------|-------------|-------------|
+| `get_org` | Get org name, ID, and settings summary. | No |
+| `list_teams` | List all teams in the org with member counts. | No |
+| `get_team` | Get team details and member list. | No |
+| `list_team_members` | List members of a team with their roles. | No |
+
+### Publishing Tool
+
+| Tool | Description | Destructive |
+|------|-------------|-------------|
+| `publish_api` | Create a new API from an OpenAPI spec string. Requires `api_name`, `version`, `spec`, `team_id`. | **Yes** — annotated `destructiveHint: true` |
+
+---
+
+## Claude Connector (Anthropic Directory)
+
+The second sub-feature is submitting Winspect as an official connector to Anthropic's Claude Connectors Directory. This allows any Claude.ai user to connect Winspect from the Claude interface without any self-hosted infrastructure.
+
+**Requirements for submission** (Anthropic standards):
+- OAuth 2.0 authorization code flow with PKCE (`/oauth/authorize`, `/oauth/token`, `/oauth/callback`)
+- Scoped permissions: `read:apis`, `write:apis`, `read:subscriptions`, `read:org`
+- Tool annotations (`readOnlyHint`, `destructiveHint`) on all tools
+- Privacy policy URL
+- Connector icon and description
+
+**User experience once listed:**
+1. User opens Claude.ai → Integrations → "Connect Winspect"
+2. Redirected to Winspect OAuth — authenticates with their existing Winspect credentials
+3. Claude can now call Winspect MCP tools on behalf of the user inside any conversation
+
+This is the primary distribution channel for non-technical users. Technical users can self-host the MCP server and configure it directly in Claude Code, Cursor, or any MCP client.
+
+---
+
+## Backlog
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| bl-022 | Bootstrap winspect-mcp-server repo | P1 |
+| bl-023 | MCP tools — API catalog | P1 |
+| bl-024 | MCP tools — subscriptions and authz | P1 |
+| bl-025 | MCP tools — org and team info | P2 |
+| bl-026 | MCP tool — publish_api | P2 |
+| bl-027 | OAuth 2.0 for Claude Connector Directory | P2 |
+| bl-028 | Submit to Anthropic Claude Connectors Directory | P3 |
+
+---
+
+## Repository
+
+**New repo**: `winspect-mcp-server` (TypeScript, Node.js, `@modelcontextprotocol/sdk`, Express, Docker)
+
+See [repositories](/architecture/repositories) for full details.
+
+---
+
+## Decision
+
+See [PDR-006](/decisions/PDR-006-agentic-integration) for the architectural decision record covering this feature and the CLI.
