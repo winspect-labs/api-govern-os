@@ -1,26 +1,71 @@
 ---
 title: Pitch
 category: product
-last_updated: 2026-03-01
+last_updated: 2026-03-18
 ---
 
 # Pitch
 
 ## One-Liner
 
-Winspect is the API governance layer that gives platform teams a single inventory, subscription-based authorization, and AI-powered discovery—without replacing your authentication or gateways.
+Winspect is the governance layer for all programmable interfaces — REST APIs and MCP servers — giving platform teams a single inventory, subscription-based authorization, and AI-powered discovery without replacing your authentication or gateways.
 
-## Problem
+---
+
+## The Two Sprawl Problems
+
+### API Sprawl (Today)
 
 In large organizations, APIs sprawl across teams, clusters, and repos. There is no single inventory. Authorization is scattered across gateways, custom middleware, and tribal knowledge. Engineers ask "where's the spec?" and get pointed to three different tools. Product managers cannot answer "what APIs do we have?" without archaeology.
 
+### MCP Server Sprawl (Next)
+
+As teams ship AI features, they deploy MCP servers. By 2027, a 200-engineer organization will have 30–50 MCP servers — most unregistered, most with no owner, most with no quality bar on their tool descriptions. Any agent in the org can call any MCP server. There is no way to audit which agent called what at 2am, and no way to stop it. This is API sprawl in 2018. We already know where it ends.
+
+---
+
 ## Solution
 
-A governance layer that consolidates API knowledge into one place. Teams subscribe to APIs and get automatic authorization. Kubernetes discovery populates the catalog without manual registration. Semantic search lets engineers find APIs by natural language. The platform augments—does not replace—existing auth and infrastructure.
+A governance layer that handles both surfaces from a single platform:
+
+**For APIs:**
+- Unified catalog from Kubernetes discovery and manual registration
+- Subscription-based authorization: teams request access, approvers grant it
+- RAG-powered semantic search: "find APIs that handle user authentication"
+- Augments existing auth and gateways — does not replace them
+
+**For MCP Servers:**
+- Register and own MCP servers alongside APIs in the same catalog
+- Lint tool manifests for quality: naming conventions, description completeness, schema coverage
+- Agent identities subscribe to MCP servers using the same approval workflow as API access
+- External AuthZ API (`POST /v1/mcp-authz/check`) enforces access at tool invocation time
+- Per-agent rate limiting prevents runaway agent loops from hammering services
+
+**For Agents:**
+- Winspect itself is MCP-accessible: any Claude, Cursor, or custom agent can query the catalog
+- Subscription model extended: agents are first-class subscribers alongside human teams
+
+---
+
+## Why Now
+
+MCP has crossed the adoption threshold: 97M monthly SDK downloads as of February 2026, adopted across Anthropic, OpenAI, Google, Microsoft, and Amazon. The MCP server deployment wave is beginning. Governance infrastructure needs to be in place before sprawl sets in — not after.
+
+---
 
 ## Traction
 
-- Core API catalog, subscriptions, and ABAC shipped
+- Core API catalog, subscriptions, and ABAC shipped (Q4 2025)
 - K8s auto-discovery in progress (runtime records, bulk import, manual mapping)
 - RAG semantic search in progress
-- Subscription-based authorization designed; phased rollout planned
+- Subscription-based AuthZ designed; phased rollout planned (Q2 2026)
+- MCP server tools (Winspect as MCP client) designed (Q3 2026)
+- MCP governance framework designed; implementation Q1 2027
+
+---
+
+## Target Customer
+
+Platform engineering teams at growth-stage, API-first companies (50–500 engineers) running Kubernetes and microservices who are beginning to adopt AI agents internally.
+
+The buyer pain: they already have API sprawl and can see MCP server sprawl coming. Winspect is the one platform that addresses both with the same governance model.
