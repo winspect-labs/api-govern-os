@@ -60,20 +60,13 @@ quarters:
   - id: Q1-2027
     label: Q1 2027
     themes:
-      - Extend subscription entity for MCP server subscriptions and agent identities (bl-033)
-      - MCP server catalog registry UI — register, list, detail view (bl-034)
-      - MCP server team ownership model and ABAC roles (bl-035)
-      - MCP server linting engine — tool descriptions, schema validation, naming rules (bl-036)
-      - Agent identity registration and MCP subscription approval workflow (bl-038)
-      - External AuthZ API for MCP tool access — POST /v1/mcp-authz/check (bl-039)
+      - TBD — MCP governance track (bl-033–bl-041) deferred until after first production launch; APIs-first milestone
+      - Revisit catalog, linting, agent AuthZ, and rate limits once governance model is defined
     status: planned
 
   - id: Q2-2027
     label: Q2 2027
     themes:
-      - MCP server quality score dashboard and org-level quality overview (bl-037)
-      - Per-agent rate limiting for MCP tool invocations (bl-040)
-      - K8s MCP server auto-discovery (bl-041)
-      - Usage analytics per MCP server subscription
-      - GTM launch — Product Hunt, HackerNews, Claude Connector Directory listing
+      - Continuation of post-launch themes (TBD)
+      - GTM and community (Product Hunt, HackerNews, etc.) as aligned with launch timing
     status: planned

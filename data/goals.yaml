@@ -58,10 +58,9 @@ goals:
   - id: mcp-governance
     title: MCP Server Governance
     description: >
-      Extend Winspect's governance surface beyond REST APIs to include MCP servers.
-      Teams register and own MCP servers in the same catalog. Agents subscribe to MCP servers
-      using the same subscription model as API access. Governance framework covers linting,
-      quality scoring, rate limits, and agent-level authorization. Closes the emerging MCP sprawl
-      problem before it reaches the scale of API sprawl.
+      Extend Winspect's governance surface beyond REST APIs to include MCP servers
+      (catalog, linting, quality, agent subscriptions, AuthZ). **Deprioritized until after the
+      first production-launch milestone:** focus stays on REST/OpenAPI APIs, discovery, CLI, and
+      core platform. Governance model for MCP is TBD; backlog items bl-033–bl-041 are deferred.
     status: active
-    target_date: Q1 2027
+    target_date: TBD (post production launch)

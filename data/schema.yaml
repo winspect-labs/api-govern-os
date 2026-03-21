@@ -134,7 +134,7 @@ domains:
     description: winspect-cli — TypeScript CLI for publishing APIs, listing subscribers, searching, and managing subscriptions from the terminal or CI/CD
   - id: mcp-governance
     file: data/features/mcp-governance.yaml
-    description: MCP server catalog, team ownership, linting/quality control, agent subscription authz, rate limits, and K8s MCP discovery — governance layer for MCP server sprawl
+    description: MCP server catalog, linting, agent authz, rate limits, K8s discovery — deferred until post production launch; APIs-first milestone (see goal mcp-governance)
   - id: developer-tooling
     file: data/features/developer-tooling.yaml
     description: Public winspect CLI (registry-focused), GitHub Action, CI integration, and developer onboarding

@@ -587,12 +587,12 @@ items:
       - label: Spec
         url: /features/developer-cli
 
-  # ── MCP Governance ───────────────────────────────────────────────────────────
+  # ── MCP Governance (deferred — APIs & production launch first; bl-033–bl-041) ──
 
   - id: bl-033
-    title: Extend subscription entity to support MCP server subscriptions
-    status: proposed
-    priority: P0
+    title: "[Deferred] Extend subscription entity to support MCP server subscriptions"
+    status: deferred
+    priority: P3
     ice:
       impact: 9
       confidence: 8
@@ -605,6 +605,7 @@ items:
       (client_id, hashed_secret, name, description, owning_team_id). Requires Flyway migration,
       updated OpenAPI spec, and frontend type regeneration. This is the schema foundation
       all other MCP governance features depend on.
+      **Deferred** until after production launch — product focus is REST/OpenAPI APIs first; MCP governance model TBD.
     goal_ids:
       - mcp-governance
       - subscription-authz
@@ -614,9 +615,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-034
-    title: MCP server registration UI (catalog list, register, detail view)
-    status: proposed
-    priority: P0
+    title: "[Deferred] MCP server registration UI (catalog list, register, detail view)"
+    status: deferred
+    priority: P3
     ice:
       impact: 9
       confidence: 8
@@ -628,6 +629,7 @@ items:
       MCP server detail page (tools list, subscribers, quality report, owner team).
       Backend endpoints: GET /mcp-management/servers, POST /mcp-management/servers,
       GET /mcp-management/servers/{id}. Mirrors the API catalog UI patterns.
+      **Deferred** — MCP catalog not in scope until post milestone.
     goal_ids:
       - mcp-governance
     feature_id: mcp-server-catalog
@@ -636,9 +638,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-035
-    title: MCP server team ownership model (assign owner team, ABAC roles)
-    status: proposed
-    priority: P1
+    title: "[Deferred] MCP server team ownership model (assign owner team, ABAC roles)"
+    status: deferred
+    priority: P3
     ice:
       impact: 8
       confidence: 8
@@ -657,9 +659,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-036
-    title: MCP server linting engine (tool description quality, schema validation, naming)
-    status: proposed
-    priority: P1
+    title: "[Deferred] MCP server linting engine (tool description quality, schema validation, naming)"
+    status: deferred
+    priority: P3
     ice:
       impact: 8
       confidence: 7
@@ -681,9 +683,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-037
-    title: MCP server quality score and dashboard
-    status: proposed
-    priority: P2
+    title: "[Deferred] MCP server quality score and dashboard"
+    status: deferred
+    priority: P3
     ice:
       impact: 7
       confidence: 7
@@ -703,9 +705,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-038
-    title: Agent identity registration and MCP server subscription workflow
-    status: proposed
-    priority: P1
+    title: "[Deferred] Agent identity registration and MCP server subscription workflow"
+    status: deferred
+    priority: P3
     ice:
       impact: 9
       confidence: 7
@@ -727,9 +729,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-039
-    title: External AuthZ API for MCP tool access (POST /v1/mcp-authz/check)
-    status: proposed
-    priority: P1
+    title: "[Deferred] External AuthZ API for MCP tool access (POST /v1/mcp-authz/check)"
+    status: deferred
+    priority: P3
     ice:
       impact: 9
       confidence: 8
@@ -750,9 +752,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-040
-    title: Per-agent rate limiting for MCP tool invocations
-    status: proposed
-    priority: P2
+    title: "[Deferred] Per-agent rate limiting for MCP tool invocations"
+    status: deferred
+    priority: P3
     ice:
       impact: 7
       confidence: 7
@@ -773,9 +775,9 @@ items:
         url: /features/mcp-governance
 
   - id: bl-041
-    title: K8s MCP server auto-discovery (extend discovery agent)
-    status: proposed
-    priority: P2
+    title: "[Deferred] K8s MCP server auto-discovery (extend discovery agent)"
+    status: deferred
+    priority: P3
     ice:
       impact: 7
       confidence: 6
