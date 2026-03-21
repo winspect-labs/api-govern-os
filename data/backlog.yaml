@@ -344,3 +344,810 @@ items:
     links:
       - label: Spec
         url: /features/api-change-notifications
+
+  # ── MCP Server ──────────────────────────────────────────────────────────────
+
+  - id: bl-022
+    title: Bootstrap winspect-mcp-server repo (TypeScript, MCP SDK, Streamable HTTP)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Create winspect-mcp-server TypeScript repo using the official @modelcontextprotocol/sdk.
+      Set up Streamable HTTP transport (Express or Fastify), environment config (ORG_ID, API_KEY /
+      PERSONAL_ACCESS_TOKEN, PLATFORM_BASE_URL), and Docker packaging. Wire basic health check.
+      This is the foundation all MCP tools are built on.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-023
+    title: MCP tools — API catalog (list_apis, get_api, search_apis, get_api_operations)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Implement MCP tools that proxy to platform-backend-service:
+      list_apis (GET /api-management/apis, filterable by name/tag/status),
+      get_api (GET /api-management/apis/{apiId}, returns metadata + spec),
+      get_api_operations (GET /api-management/apis/{apiId}/operations),
+      search_apis (POST /platform-ai/search, wraps RAG semantic search).
+      All tools accept org_id + api_key in server config; no per-call auth needed.
+    goal_ids:
+      - agentic-integration
+      - ai-discoverability
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-024
+    title: MCP tools — subscriptions and authorization (list_subscriptions, get_subscription, check_authz, list_subscribers)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: >
+      Implement MCP tools:
+      list_subscriptions (list subscriptions for caller's org/team),
+      get_subscription (get subscription detail + status),
+      list_subscribers (get all subscriber teams for a given API),
+      check_authz (POST /v1/authz/check — check if a team has permission to an API).
+      Enables AI agents to reason about who can access what.
+    goal_ids:
+      - agentic-integration
+      - subscription-authz
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-025
+    title: MCP tools — org and team info (get_org, list_teams, get_team, list_team_members)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 8
+    description: >
+      Implement MCP tools:
+      get_org (get org name, settings, API key status),
+      list_teams (list all teams in the org with member counts),
+      get_team (get team details including member list),
+      list_team_members (get members of a specific team with roles).
+      Enables AI agents to understand org structure when answering governance questions.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-026
+    title: MCP tool — publish_api (create or update API from spec)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 6
+    description: >
+      Implement destructive MCP tool publish_api: accepts api_name, version, description,
+      spec (OpenAPI YAML/JSON string), team_id. Proxies to POST /api-management/apis.
+      Tool annotation: destructiveHint=true. Requires caller confirmation prompt.
+      Enables AI agents and CI pipelines to register APIs programmatically via MCP.
+    goal_ids:
+      - agentic-integration
+    feature_id: mcp-server
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  - id: bl-027
+    title: MCP server — OAuth 2.0 auth for Claude Connector Directory submission
+    status: proposed
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 5
+    description: >
+      Implement OAuth 2.0 authorization code flow on the MCP server so it can be submitted
+      to Anthropic's Claude Connectors Directory. Requires: /oauth/authorize, /oauth/token,
+      /oauth/callback endpoints; PKCE support; scoped permissions (read:apis, write:apis,
+      read:subscriptions, read:org). Store token-to-org mapping in the MCP server's own
+      lightweight persistence layer. See Anthropic submission docs for exact requirements.
+    goal_ids:
+      - agentic-integration
+      - enterprise-readiness
+    feature_id: claude-connector
+    links:
+      - label: Spec
+        url: /features/mcp-server
+      - label: Anthropic Submission Docs
+        url: https://claude.com/docs/connectors/building/submission
+
+  - id: bl-028
+    title: Submit Winspect connector to Anthropic Claude Connectors Directory
+    status: proposed
+    priority: P3
+    ice:
+      impact: 9
+      confidence: 6
+      ease: 4
+    description: >
+      After OAuth flow is implemented (bl-027), prepare and submit Winspect MCP server
+      to Anthropic's Claude Connectors Directory. Requires: privacy policy URL, tool annotations
+      (readOnlyHint / destructiveHint), connector icon, description, and Anthropic review.
+      This is the primary distribution channel for non-technical Claude.ai users.
+    goal_ids:
+      - agentic-integration
+    feature_id: claude-connector
+    links:
+      - label: Spec
+        url: /features/mcp-server
+
+  # ── Developer CLI ────────────────────────────────────────────────────────────
+
+  - id: bl-029
+    title: Bootstrap winspect-cli repo (TypeScript, oclif, npm distribution)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: >
+      Create winspect-cli using oclif (battle-tested Node.js CLI framework used by Heroku/Salesforce).
+      Set up monorepo structure, TypeScript config, npm publish pipeline. Implement
+      `winspect auth login` (prompts org ID + API key, saves to ~/.winspect/config.json)
+      and `winspect auth whoami`. All subsequent commands read from config or
+      WINSPECT_ORG_ID / WINSPECT_API_KEY env vars for CI use.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-030
+    title: CLI commands — API management (apis:list, apis:get, apis:publish, apis:search)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: >
+      Implement core API commands:
+      winspect apis:list [--status <s>] [--team <id>] [--output json|table],
+      winspect apis:get <apiId> [--spec] (--spec flag dumps raw OpenAPI spec),
+      winspect apis:publish --name <n> --version <v> --spec-file <path> [--team <id>]
+        (multipart POST to /api-management/apis; prints created API ID),
+      winspect apis:search <query> (semantic search via RAG endpoint).
+      Target: developers can script API publishing in CI pipelines.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-031
+    title: CLI commands — subscriptions and subscribers (subscriptions:list, apis:subscribers)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 7
+    description: >
+      Implement subscription commands:
+      winspect subscriptions:list [--status pending|approved|rejected] [--output json|table],
+      winspect apis:subscribers <apiId> [--output json|table]
+        (lists all subscriber teams with permission levels and subscription status).
+      Enables API owners to audit who has access to their APIs from the terminal.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  - id: bl-032
+    title: CLI commands — org and team management (orgs:info, teams:list, teams:members)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 6
+      confidence: 8
+      ease: 8
+    description: >
+      Implement org/team commands:
+      winspect orgs:info (show org name, ID, API key status),
+      winspect teams:list [--output json|table],
+      winspect teams:members <teamId> [--output json|table].
+      Useful for scripted org auditing and onboarding automation.
+    goal_ids:
+      - agentic-integration
+    feature_id: developer-cli
+    links:
+      - label: Spec
+        url: /features/developer-cli
+
+  # ── MCP Governance ───────────────────────────────────────────────────────────
+
+  - id: bl-033
+    title: Extend subscription entity to support MCP server subscriptions
+    status: proposed
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: >
+      Extend the Subscription entity and data model so that the subscriber_type field
+      accepts both TEAM (existing, for human teams subscribing to APIs) and AGENT (new, for
+      agent identities subscribing to MCP servers). Add resource_type field to distinguish
+      API subscriptions from MCP_SERVER subscriptions. Add AgentIdentity entity
+      (client_id, hashed_secret, name, description, owning_team_id). Requires Flyway migration,
+      updated OpenAPI spec, and frontend type regeneration. This is the schema foundation
+      all other MCP governance features depend on.
+    goal_ids:
+      - mcp-governance
+      - subscription-authz
+    feature_id: mcp-subscription-authz
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-034
+    title: MCP server registration UI (catalog list, register, detail view)
+    status: proposed
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: >
+      Add MCP Servers section to the catalog UI alongside APIs. Screens: MCP server list
+      (name, team owner, tool count, quality score, status), register MCP server dialog
+      (name, description, transport URL, tool manifest JSON upload or URL fetch),
+      MCP server detail page (tools list, subscribers, quality report, owner team).
+      Backend endpoints: GET /mcp-management/servers, POST /mcp-management/servers,
+      GET /mcp-management/servers/{id}. Mirrors the API catalog UI patterns.
+    goal_ids:
+      - mcp-governance
+    feature_id: mcp-server-catalog
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-035
+    title: MCP server team ownership model (assign owner team, ABAC roles)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 7
+    description: >
+      Each MCP server must have an owning team (similar to API → team ownership).
+      Owner team gets MANAGE-level ABAC permission; other teams can subscribe for CALL permission.
+      Extend ABAC policy evaluation to cover mcp_server resources. Org admin can reassign
+      ownership. Orphaned MCP servers (no owner team) are flagged with a warning in the catalog.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    feature_id: mcp-server-catalog
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-036
+    title: MCP server linting engine (tool description quality, schema validation, naming)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 5
+    description: >
+      Build a static linting engine that runs on MCP server tool manifests at registration time
+      and on-demand. Rules: tool name must be snake_case and verb-prefixed (e.g. get_order, list_users);
+      tool description must be ≥20 characters and not start with "A tool that...";
+      all inputSchema properties must have a description; no required fields without type annotation;
+      tool description must not contain tokens that look like secrets (regex for hex-40, base64-40+).
+      Produces a structured lint report (rule_id, severity: error/warning/info, message, tool_name).
+      Critical errors block registration. Warnings surface in UI.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    feature_id: mcp-server-linting
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-037
+    title: MCP server quality score and dashboard
+    status: proposed
+    priority: P2
+    ice:
+      impact: 7
+      confidence: 7
+      ease: 6
+    description: >
+      Compute a composite quality score (0–100) for each registered MCP server based on
+      lint rule pass rates, tool description length/clarity, inputSchema completeness,
+      number of warnings vs errors. Display score badge on catalog list and detail page.
+      Org-level dashboard shows quality distribution across all MCP servers — which servers
+      are below threshold, which teams own them, trend over time as servers are updated.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    feature_id: mcp-server-linting
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-038
+    title: Agent identity registration and MCP server subscription workflow
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 7
+      ease: 5
+    description: >
+      UI and API for: (1) registering an agent identity (name, description, owning team, client_id
+      generated, secret displayed once); (2) subscribing an agent identity to an MCP server
+      (selects server, requests scope: read_tools or call_tools); (3) approval workflow — MCP server
+      owner team approves/rejects with optional scope restriction; (4) approved agent receives
+      a scoped token valid for calling that MCP server's tools. Mirrors the API subscription
+      approval workflow. Backend: POST /mcp-management/agent-identities,
+      POST /mcp-management/servers/{id}/subscriptions.
+    goal_ids:
+      - mcp-governance
+      - subscription-authz
+    feature_id: mcp-subscription-authz
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-039
+    title: External AuthZ API for MCP tool access (POST /v1/mcp-authz/check)
+    status: proposed
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 6
+    description: >
+      REST endpoint for MCP servers to enforce authorization at tool invocation time.
+      Request: { agent_client_id, mcp_server_id, tool_name, required_scope }.
+      Response: { allowed: boolean, reason: string, subscription_id }.
+      The MCP server calls this before executing any tool. Enables fine-grained tool-level
+      access control beyond server-level subscription. Mirrors POST /v1/authz/check for APIs.
+      Stateless and low-latency (<10ms p99 on warm cache). OPA-backed policy evaluation.
+    goal_ids:
+      - mcp-governance
+      - subscription-authz
+    feature_id: mcp-subscription-authz
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-040
+    title: Per-agent rate limiting for MCP tool invocations
+    status: proposed
+    priority: P2
+    ice:
+      impact: 7
+      confidence: 7
+      ease: 5
+    description: >
+      Configurable rate limits per MCP server subscription. Platform team sets limits at the
+      MCP server level (e.g. 1000 tool calls/hour globally) and per-subscription (e.g. 100/hour
+      per agent). Rate limit enforcement runs at the MCP authz check layer — if limit exceeded,
+      /v1/mcp-authz/check returns allowed: false with reason RATE_LIMIT_EXCEEDED.
+      Quota windows: per-minute, per-hour, per-day. Integrates with usage analytics.
+      Critical for preventing runaway agent loops from overloading downstream services.
+    goal_ids:
+      - mcp-governance
+      - enterprise-readiness
+    feature_id: mcp-rate-limits
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  - id: bl-041
+    title: K8s MCP server auto-discovery (extend discovery agent)
+    status: proposed
+    priority: P2
+    ice:
+      impact: 7
+      confidence: 6
+      ease: 5
+    description: >
+      Extend the winspect-api-discovery-agent to detect MCP servers deployed in customer K8s clusters.
+      Detection heuristics: (1) pod/service label app.winspect.io/type=mcp-server;
+      (2) service annotation winspect.io/mcp-transport-url pointing to Streamable HTTP endpoint;
+      (3) ConfigMap with key winspect-mcp-manifest containing tool manifest JSON.
+      Discovered MCP servers appear as orphaned runtime records in the MCP catalog, following
+      the same bulk-import and manual-mapping workflow used for REST API discovery.
+    goal_ids:
+      - mcp-governance
+      - automated-discovery
+    feature_id: mcp-k8s-discovery
+    links:
+      - label: Spec
+        url: /features/mcp-governance
+
+  # ── Developer adoption (CLI, registry, free tier, hosted MCP) ─────────────
+
+  - id: bl-042
+    title: winspect CLI core (auth, config, publish, mock, lint)
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 8
+      ease: 6
+    description: TypeScript CLI with Commander; browser login exchanging to named org API key; ~/.winspect/config.json; publish via discovery sync; mock create/list/url; Spectral lint; CI env auto-detection and .winspect.yaml.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-043
+    title: winspect init onboarding (spec detect, CODEOWNERS, first publish)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 8
+    description: Scan for openapi.yaml; optional CODEOWNERS team default; write .winspect.yaml; run first publish; print mock URL — target under 30s to value.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-044
+    title: winspect pull, search, diff, log, status commands
+    status: planned
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 6
+    description: pull from registry endpoints; search via RAG; diff versions; version history log; org status overview — depends on registry read API and versioning.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-045
+    title: winspect team commands (list, create, invite, members)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 8
+    description: CLI surface for team management aligned with org plan limits (free tier max teams).
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-046
+    title: winspect mcp url and mcp test commands
+    status: planned
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 9
+    description: Print hosted MCP URL and sample Cursor/Claude config; verify MCP health — thin client until hosted MCP server ships.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-047
+    title: CLI distribution (npm, Homebrew tap, single binary, curl installer)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Publish @winspect/cli to npm; Homebrew formula; pkg/esbuild binaries on GitHub Releases; install.winspect.io script for CI.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-048
+    title: publish-api-spec-action GitHub Action (PR comment outputs)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 8
+    description: Marketplace action installing CLI; inputs spec path, check-breaking, strict; outputs mock-url, spec-url, api-id for workflow composition and PR comments.
+    goal_ids:
+      - developer-adoption
+    feature_id: github-action
+    links:
+      - label: Spec
+        url: /features/github-action
+
+  - id: bl-049
+    title: CLI opt-in telemetry (commands, exit codes, CI detection)
+    status: planned
+    priority: P2
+    ice:
+      impact: 5
+      confidence: 9
+      ease: 9
+    description: Anonymous telemetry with opt-out via config or WINSPECT_TELEMETRY=false; no spec content.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-050
+    title: Backend CLI source type and POST /cli/auth/complete (org API key for CLI login)
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 8
+    description: SpecRecord SourceType CLI; endpoint to complete browser login and create named org API key returned to CLI; extend discovery sync for CLI publish metadata.
+    goal_ids:
+      - developer-adoption
+      - production-launch
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-051
+    title: Spec version history (spec_record_versions, tags, latest pointer)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Immutable rows per publish; semver or git-sha tags; migration from single-row spec records; enables pull @version and changelog correlation.
+    goal_ids:
+      - developer-adoption
+    feature_id: spec-versioning
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-052
+    title: Registry read endpoints GET /registry/{org}/{name}[/{version}]
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: Authenticated and optional public read for opt-in APIs; list versions endpoint; powers winspect pull.
+    goal_ids:
+      - developer-adoption
+    feature_id: registry-read-api
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-053
+    title: Breaking change diff on publish (openapi-diff / oasdiff, stored summary)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Server-side diff vs latest; store JSON summary on version row; CLI --check-breaking gates CI.
+    goal_ids:
+      - developer-adoption
+    feature_id: breaking-change-detection
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-054
+    title: Mock server auto-regenerate variants after spec publish
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 8
+    description: Hook ApiSpecSyncService / registry update path to call mock generation when API has mock server — stable mock UUID, updated responses.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-regenerate-on-publish
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-055
+    title: Public API registry index (opt-in, SEO, winspect search --public)
+    status: planned
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 6
+      ease: 5
+    description: UI at app.winspect.io/registry; public read API for opted-in APIs; drives discovery and growth.
+    goal_ids:
+      - developer-adoption
+    feature_id: public-registry
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-056
+    title: Organisation plan model and PlanEnforcementService (FREE/PRO/ENTERPRISE)
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 9
+      ease: 6
+    description: organisation_plans table; limits teams, mock count, mock calls/day; 402 with upgrade URL; UI surfacing plan.
+    goal_ids:
+      - developer-adoption
+      - production-launch
+    feature_id: org-plan-model
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-057
+    title: Mock server call rate limiting (free tier daily quota)
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 7
+    description: Per-mock-server daily counter (DB or Redis); 429 + upgrade messaging; aligns with free tier mock_calls_per_day.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-rate-limiting
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-058
+    title: Spectral ruleset DB persistence (replace Next.js in-memory stub)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 9
+      ease: 7
+    description: Persist custom rulesets in Java backend; Pro tier feature; CLI winspect lint --org-ruleset fetches from API.
+    goal_ids:
+      - developer-adoption
+    feature_id: spectral-ruleset-persistence
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-059
+    title: Hosted MCP server at mcp.winspect.io/org/{orgId}/mcp
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 7
+      ease: 5
+    description: JSON-RPC MCP exposing list_apis, search_apis, get_api_spec, get_mock_url; Bearer org key; backed by RAG and catalog services.
+    goal_ids:
+      - developer-adoption
+      - ai-discoverability
+    feature_id: hosted-mcp-server
+    links:
+      - label: Spec
+        url: /features/hosted-mcp-server
+
+  - id: bl-060
+    title: MCP tool implementations (list_apis, search_apis, get_spec, get_mock_url)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 7
+      ease: 6
+    description: Concrete tool handlers and schemas for Cursor/Claude Desktop integration; integration tests.
+    goal_ids:
+      - developer-adoption
+    feature_id: hosted-mcp-server
+    links:
+      - label: Spec
+        url: /features/hosted-mcp-server
+
+  - id: bl-061
+    title: Free tier mock TTL policy (deactivate after prolonged inactivity)
+    status: planned
+    priority: P2
+    ice:
+      impact: 5
+      confidence: 8
+      ease: 8
+    description: Optional job to soft-disable mocks unused 90+ days with email warnings; re-enable via CLI or UI — protects shared infra cost.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-rate-limiting
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-062
+    title: winspect diff command (local vs published, semver pair)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 7
+    description: Client-side oasdiff for winspect diff openapi.yaml and winspect diff name@v1 v2; complements server-side breaking detection on publish.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-063
+    title: winspect log command (version history table)
+    status: planned
+    priority: P2
+    ice:
+      impact: 6
+      confidence: 8
+      ease: 8
+    description: Pretty-print version history from spec_record_versions — timestamps, git SHAs, breaking flags; depends on spec versioning (bl-051).
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli

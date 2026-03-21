@@ -39,3 +39,29 @@ goals:
     description: Multi-tenant hardening, audit trails, SLA guarantees
     status: active
     target_date: Q4 2026
+
+  - id: agentic-integration
+    title: Agentic Integration & Developer Tooling
+    description: Make Winspect programmable and accessible from AI agent workflows and developer toolchains via MCP server, Claude connector, and CLI
+    status: active
+    target_date: Q3 2026
+
+  - id: developer-adoption
+    title: Developer Adoption via CLI and Free Tier
+    description: >
+      Make Winspect the go-to API registry for individual developers and small teams.
+      Ship a public CLI, GitHub Action, free tier, and hosted MCP server to drive
+      viral adoption before enterprise monetization.
+    status: active
+    target_date: Q3 2026
+
+  - id: mcp-governance
+    title: MCP Server Governance
+    description: >
+      Extend Winspect's governance surface beyond REST APIs to include MCP servers.
+      Teams register and own MCP servers in the same catalog. Agents subscribe to MCP servers
+      using the same subscription model as API access. Governance framework covers linting,
+      quality scoring, rate limits, and agent-level authorization. Closes the emerging MCP sprawl
+      problem before it reaches the scale of API sprawl.
+    status: active
+    target_date: Q1 2027

@@ -5,5 +5,12 @@
   "rag-search": "RAG Semantic Search",
   "subscription-authz": "Subscription AuthZ",
   "production-launch": "Production Launch",
-  "api-change-notifications": "API Change Notifications"
+  "api-change-notifications": "API Change Notifications",
+  "mcp-server": "MCP Server & Claude Connector",
+  "developer-cli": "Developer CLI",
+  "winspect-cli": "winspect CLI (registry)",
+  "github-action": "GitHub Action",
+  "api-registry": "API Registry",
+  "free-tier": "Free Tier & Plans",
+  "hosted-mcp-server": "Hosted MCP Server"
 }

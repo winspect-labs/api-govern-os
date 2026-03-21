@@ -1,0 +1,194 @@
+---
+title: Go-to-Market Strategy
+category: product
+last_updated: 2026-03-18
+---
+
+# Go-to-Market Strategy
+
+Winspect is a **devtool for platform engineers**. Devtools do not follow traditional SaaS GTM. The buyer is a technically sophisticated engineer who distrusts marketing, values peer credibility above all, and makes purchasing decisions based on hands-on evaluation. Every GTM motion must respect this.
+
+---
+
+## GTM Philosophy: Earn, Don't Broadcast
+
+Platform engineers do not respond to ads. They respond to:
+1. Something a peer recommended
+2. Something they found on GitHub
+3. Something they read on HN or a technical blog
+4. Something they discovered while solving a problem
+
+The GTM strategy is built entirely around these four channels.
+
+---
+
+## Phase 1: Credibility First (Pre-Launch, Q2–Q3 2026)
+
+Before acquisition, establish technical credibility in communities where platform engineers live.
+
+### 1.1 Technical Content — Own the Problem Space
+
+Publish precise, opinionated technical writing on the problems Winspect solves. These are not marketing blog posts. They are the kind of writing that gets bookmarked, quoted on Slack, and linked from HN threads.
+
+**Target topics:**
+- "API sprawl: what it actually costs platform teams" (concrete, numbered)
+- "How subscription-based authorization differs from gateway auth" (architectural explainer)
+- "MCP server sprawl: the governance problem AI teams haven't noticed yet" (thought leadership — publish before the problem is mainstream)
+- "Why tool description quality matters: a benchmark of 50 public MCP servers" (data-driven, shareable)
+- "Governing AI agents like you govern APIs" (strategic framing, crosslinks API and MCP governance)
+
+**Distribution:** Company blog → HackerNews Show HN / Ask HN → dev.to → LinkedIn (engineering management audience) → X/Twitter
+
+**Goal:** Be the source people link to when the MCP governance conversation starts in earnest.
+
+### 1.2 GitHub — Make the Repo Worth Starring
+
+The GitHub presence is a distribution channel. Engineers evaluate devtools by reading the README before they sign up.
+
+- Public GitHub repo for `winspect-mcp-server` with excellent documentation
+- `winspect-cli` published on npm with a great README and usage examples
+- GitHub Stars as a social signal — track weekly, run targeted campaigns (e.g., "Show HN: winspect-mcp-server")
+- GitHub Actions workflow examples: "publish your OpenAPI spec on merge" snippets
+
+**Goal:** 500 GitHub stars on `winspect-mcp-server` before Product Hunt launch.
+
+### 1.3 Community Presence — Not Noise, Just Signal
+
+Be present in the communities where the ICP lives. Participate, don't pitch.
+
+**Communities:**
+- **CNCF Slack** (#platform-engineering, #api-management) — answer governance questions, never sell
+- **Anthropic Discord** (MCP community) — contribute to MCP governance conversations
+- **Platformengineering.org** — post and engage with content
+- **r/devops, r/kubernetes** — answer relevant threads
+- **API World / Apidays community** — be known before sponsoring
+
+**Approach:** One team member owns community. Never post product links unprompted. Be the person who helps, not the person who hawks.
+
+---
+
+## Phase 2: Launch (Q3 2026 — Production Launch)
+
+### 2.1 Product Hunt
+
+**Why:** Product Hunt has a strong devtool and AI tooling community. It is high signal for the "agentic developer tools" category, which Winspect now occupies with MCP governance.
+
+**What wins on Product Hunt:**
+- A product that solves a real pain point concisely described
+- A founder story / "why we built this"
+- Strong visual — a 60-second demo GIF or video
+- Community mobilization: makers who know the hunter community personally launch on Mondays with a prepared supporter list
+
+**Timing:** Same day as the "MCP governance" blog post goes live — compound the attention.
+
+**Goal:** Top 5 product of the day in Developer Tools category.
+
+### 2.2 HackerNews Show HN
+
+**Why:** HN is the highest-credibility channel for developer tools. A successful Show HN post generates sustained inbound from the exact ICP.
+
+**Format:** "Show HN: Winspect – governance layer for APIs and MCP servers"  
+**Content:** Technical, honest, no marketing language. Show the hard problem. Show the system design. Show the tradeoffs made.
+
+**What to prepare:**
+- A demo that shows K8s discovery → catalog → subscription approval → authz check in under 2 minutes
+- A solo-readable technical README that lands without context
+
+**Do not:** Post on the same day as Product Hunt. Space 1–2 weeks apart.
+
+### 2.3 Claude Connector Directory Submission (bl-027, bl-028)
+
+**Why this is a distribution channel, not just a feature:** The Anthropic Claude Connectors Directory is a curated list of integrations available to every Claude.ai user. Being listed there:
+- Exposes Winspect to Claude users who have never heard of it
+- Provides a credibility signal ("listed by Anthropic")
+- Creates a low-friction first touch (connect from claude.ai, no self-hosting)
+
+**This is the highest-credibility distribution channel available.** Submit as soon as OAuth is complete (Q4 2026).
+
+### 2.4 API World / Apidays Conference
+
+**Why:** API World is where platform engineers, API product managers, and developer experience leads gather. Speaking is more valuable than sponsoring.
+
+**Pitch:** "Governing APIs and MCP servers with one model: lessons from building Winspect"
+
+**Target timeline:** Submit CFP for Apidays Paris (November 2026) or API World (October 2026). This requires a draft submission 4–5 months before.
+
+---
+
+## Phase 3: Expansion (Q4 2026 – Q2 2027)
+
+### 3.1 Developer Evangelism Program
+
+Identify 5–10 platform engineers who are already using Winspect and willing to write about it. Provide early access to MCP governance features (bl-033 through bl-041) in exchange for case studies, blog posts, or conference talks.
+
+**Do not pay for endorsements.** Platform engineers will write about something that genuinely helps them. If it doesn't, fix the product.
+
+### 3.2 GitHub Actions Marketplace
+
+Publish a Winspect GitHub Action: `winspect/publish-spec-action` — scans for OpenAPI spec changes in a PR, publishes to the Winspect catalog on merge. This is a distribution channel because every repo that adds the action is a public signal. The action's README links back to Winspect. GitHub Actions search is how platform engineers discover CI/CD tools.
+
+**Target:** 100 installs in the first 3 months.
+
+### 3.3 npm Package Distribution
+
+`winspect-cli` published on npm is a distribution channel. npm weekly downloads are visible and function as social proof. A well-crafted npm README is indexed by Google and cited in Stack Overflow answers.
+
+Target: `npm install -g winspect` as a natural part of the onboarding docs.
+
+### 3.4 KubeCon CFP (Q3 2027)
+
+**Why KubeCon:** Kubernetes operators are the exact ICP for K8s discovery. KubeCon Europe (March 2027) or KubeCon North America (November 2027) is the right venue.
+
+**Pitch angle:** "From K8s service to governed API: autodiscovery, subscriptions, and the MCP governance layer"
+
+### 3.5 Outbound to Platform Engineering Teams
+
+**Approach:** Identify companies with active platform engineering job postings (LinkedIn search: "platform engineer" + "API governance" + "Kubernetes"). These companies are building what Winspect already provides.
+
+**Outreach:** Founder-led, personalized, technical. Not a mass email. Not a BDR sequence. One founder to one platform engineer, referencing specific content they published or a GitHub repo they own.
+
+**Volume:** 10 personalized outbound messages per week. Goal: 5 demos per week.
+
+---
+
+## Positioning in Key Channels
+
+### For HN and technical communities
+
+> "We built a governance layer for APIs and MCP servers. The subscription model works the same way: your team subscribes to an API, your agent subscribes to an MCP server — same approval workflow, same authz API."
+
+### For Product Hunt
+
+> "API sprawl is the problem platform teams face today. MCP server sprawl is the problem they'll face in 2027. Winspect is the single governance layer for both."
+
+### For Claude Connector Directory
+
+> "Winspect helps you govern all the APIs in your organization. Connect Winspect to Claude to ask natural language questions about your API catalog — what APIs does your org expose, who owns them, and which ones your team is subscribed to."
+
+### For KubeCon/Apidays
+
+> "We extended K8s service discovery to the governance layer: auto-discover APIs and MCP servers from running workloads, assign ownership, enforce subscription-based authorization, and audit everything."
+
+---
+
+## Metrics That Matter
+
+| Metric | Why It Matters |
+|--------|----------------|
+| GitHub Stars (`winspect-mcp-server`, `winspect-cli`) | Social proof for engineers evaluating the tool |
+| npm weekly downloads (`winspect-cli`) | Proxy for active developer usage |
+| Claude Connector Directory installs | Distribution signal from Anthropic's network |
+| Organic inbound from HN / blog posts | Measures content quality and SEO |
+| Demo-to-signup conversion | Measures product clarity |
+| Orgs → subscriptions created | Activation metric (got value from the governance loop) |
+| Net Promoter Score from platform engineers | Whether we're actually solving the problem |
+
+---
+
+## What NOT to Do
+
+- **Don't run paid ads** targeting developers. Platform engineers have trained ad-blindness and associate paid promotion with low-quality tools.
+- **Don't cold-email developer relations lists.** Platform engineers report spam to each other.
+- **Don't sponsor a conference without speaking first.** A booth with no track record is ignored. A talk that generates inbound is remembered.
+- **Don't partner with an analyst before shipping.** Gartner/Forrester recognition matters for enterprise sales in year 2+, not for the first 100 customers.
+- **Don't build a PLG motion without a working free tier.** If the free tier doesn't let engineers experience the core value (catalog + subscription + authz), it is not a PLG motion, it is a teaser.

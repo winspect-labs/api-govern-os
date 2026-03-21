@@ -1,0 +1,101 @@
+---
+title: PDR-006 Agentic Integration Architecture
+category: decision
+status: accepted
+last_updated: 2026-03-18
+---
+
+# PDR-006: Agentic Integration — MCP Server, Claude Connector, and CLI
+
+## Context
+
+Winspect currently exposes its capabilities exclusively through a browser-based portal (api-management-ui). As AI agent workflows become the primary way developers interact with tooling, Winspect must be accessible programmatically. Three integration surfaces were proposed:
+
+1. **MCP Server** — Make Winspect tools available to any AI agent via the Model Context Protocol
+2. **Claude Connector** — List Winspect in Anthropic's official Claude Connectors Directory
+3. **Developer CLI** — Ship a terminal/CI-friendly CLI for API lifecycle operations
+
+Key questions to resolve:
+- Should the MCP server be a new repo or extend platform-backend-service?
+- Which MCP transport to use?
+- Which CLI framework?
+- How do MCP and CLI relate to each other (shared client library or independent)?
+
+## Decisions
+
+### 1. MCP Server lives in a new repo (`winspect-mcp-server`)
+
+**Decision**: New TypeScript/Node.js repo, not added to platform-backend-service.
+
+**Rationale**:
+- The official `@modelcontextprotocol/sdk` is TypeScript-first; adding it to a Spring Boot monorepo would require a Java MCP implementation that is less mature and adds unrelated dependencies.
+- Separate deployment unit allows the MCP server to be deployed independently (edge, serverless functions, Docker) without touching platform-backend-service.
+- Keeps the protocol translation concern (JSON-RPC ↔ REST) isolated from the business logic layer.
+- The MCP server is stateless — it proxies calls to platform-backend-service using the caller's credentials. No shared database needed.
+
+### 2. Streamable HTTP transport (primary), Stdio (local dev)
+
+**Decision**: Streamable HTTP as the production transport; expose Stdio mode for local testing.
+
+**Rationale**:
+- Streamable HTTP is the emerging standard for remote MCP servers (as of early 2026). Claude.ai's MCP connector, Cursor's remote MCP support, and the official SDK all prefer it for hosted servers.
+- WebSocket adds complexity without benefit for our request-response tool patterns.
+- Stdio is still useful for local `claude` CLI or Cursor desktop testing — add as a flag.
+
+### 3. Claude Connector = MCP server + OAuth 2.0 layer
+
+**Decision**: The Claude Connector is not a separate service. It is the same MCP server with an OAuth 2.0 authorization code flow (PKCE) added as a route group.
+
+**Rationale**:
+- Anthropic requires OAuth 2.0 for directory-listed connectors. This is an auth layer, not a separate protocol.
+- Adding `/oauth/authorize`, `/oauth/token`, `/oauth/callback` to the MCP server keeps the architecture simple.
+- The OAuth flow maps tokens to org API keys stored in the MCP server's own lightweight persistence (SQLite or env-var-based for MVP). Production can use platform-backend-service to issue and validate tokens.
+
+### 4. CLI lives in a new repo (`winspect-cli`) using oclif
+
+**Decision**: New TypeScript repo, distributed as `@winspect/cli` on npm, built with oclif.
+
+**Rationale**:
+- oclif is the most battle-tested Node.js CLI framework (Heroku, Salesforce). Provides typed flags, auto-generated help, plugin architecture, and easy npm publishing.
+- Commander.js is lighter but lacks the structured command hierarchy needed for `apis:publish`, `teams:members`, etc.
+- Separate repo from MCP server because distribution, versioning, and testing patterns differ (npm binary vs Docker/HTTP server).
+
+### 5. CLI and MCP server do NOT share a client library (yet)
+
+**Decision**: At MVP, both the CLI and MCP server independently call platform-backend-service's REST API. A shared `@winspect/api-client` package is deferred.
+
+**Rationale**:
+- Premature extraction of a shared client library adds coordination overhead before we know the stable API surface.
+- Both are TypeScript; refactoring to a shared library later is low-risk and can be done in one PR.
+- Ship fast, refactor when duplication becomes painful (rule of three).
+
+### 6. Tool annotations are mandatory from day one
+
+**Decision**: All MCP tools must include `readOnlyHint` and `destructiveHint` annotations from the initial implementation.
+
+**Rationale**:
+- Required for Anthropic's Claude Connector Directory submission (cannot be retrofitted without re-review).
+- Informs agent reasoning about whether a tool requires user confirmation.
+- `publish_api` must be annotated `destructiveHint: true`; all read tools annotated `readOnlyHint: true`.
+
+## Consequences
+
+**Positive**:
+- Winspect becomes an MCP-native platform as the industry standard solidifies — early mover advantage in the API governance space.
+- Two new repos with clear, narrow responsibilities.
+- CLI creates a natural "forcing function" to ensure the REST API is key-accessible and complete — benefiting MCP server development and external integrations.
+- Claude Connector Directory listing provides a distribution channel to Claude.ai's user base without requiring Winspect to build its own auth UI flow from scratch.
+
+**Negative**:
+- Two new repos to maintain (CI, releases, docs).
+- MCP OAuth layer introduces a new auth surface that must be audited and monitored.
+- MCP protocol is still evolving; some changes may require SDK upgrades.
+
+## Alternatives Considered
+
+| Option | Rejected Because |
+|--------|-----------------|
+| Add MCP server to platform-backend-service | Java MCP SDK less mature; pollutes Spring Boot monorepo with protocol translation concerns; deployment coupling |
+| Use WebSocket transport only | No meaningful advantage for request-response tools; adds complexity |
+| Use Commander.js for CLI | Lacks structured command hierarchy and plugin architecture needed for multi-command CLI at scale |
+| Share client library from day one | Premature abstraction; adds repo coordination before API surface is stable |

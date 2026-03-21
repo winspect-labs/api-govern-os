@@ -1,0 +1,192 @@
+---
+title: Winspect CLI (winspect-cli)
+category: feature
+status: planned
+priority: P1
+owners: ["winspect-cli"]
+last_updated: 2026-03-18
+tags: ["cli", "developer-experience", "dx", "ci-cd", "npm", "automation"]
+---
+
+# Winspect CLI (`winspect-cli`)
+
+A TypeScript CLI distributed via npm that brings the full Winspect API lifecycle to the terminal and CI/CD pipelines. Developers can publish APIs, inspect subscribers, search the catalog, and manage subscriptions without opening a browser.
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P1" />
+
+**Completion: 0%** — Design phase. All backlog items are `proposed`.
+
+---
+
+## Strategic Context
+
+API governance tooling is maturing along a predictable path: portal → API → CLI → AI agent integration. Winspect has a portal (api-management-ui) and an API (platform-backend-service). The CLI is the missing bridge between the API and everyday developer workflows.
+
+Competitors like Postman (Postman CLI), Kong (deck), and Stoplight (Spectral CLI) all have CLI tools. The absence of a CLI creates friction at critical developer touch-points:
+
+- **CI/CD publishing**: Teams want to publish an OpenAPI spec as part of a CI pipeline, not by logging into a UI.
+- **Subscriber auditing**: API owners want to run `winspect apis:subscribers my-api-id` instead of navigating the UI.
+- **Scripted automation**: Platform teams want to script org setup (create teams, assign members) without hand-rolling HTTP calls.
+
+The CLI also serves as a forcing function to ensure the platform-backend-service REST API is clean, complete, and auth-key-accessible — which directly benefits MCP server development as well.
+
+---
+
+## Installation
+
+```bash
+npm install -g @winspect/cli
+# or
+npx @winspect/cli [command]
+```
+
+---
+
+## Authentication
+
+```bash
+# Interactive setup — prompts for org ID and API key
+winspect auth login
+
+# Show current credentials
+winspect auth whoami
+
+# Environment variable override (for CI/CD)
+WINSPECT_ORG_ID=org-123 WINSPECT_API_KEY=wsk_... winspect apis:list
+```
+
+Credentials are stored in `~/.winspect/config.json`. Environment variables always take precedence.
+
+---
+
+## Commands
+
+### API Management
+
+```bash
+# List all APIs (table output by default)
+winspect apis:list
+winspect apis:list --status active
+winspect apis:list --team <teamId>
+winspect apis:list --output json
+
+# Get API details
+winspect apis:get <apiId>
+winspect apis:get <apiId> --spec          # dump raw OpenAPI spec to stdout
+
+# Publish a new API from a spec file
+winspect apis:publish \
+  --name "Payments API" \
+  --version "1.2.0" \
+  --spec-file ./openapi.yaml \
+  --team <teamId>
+
+# Semantic search via RAG
+winspect apis:search "payment processing endpoints"
+
+# List subscribers of an API
+winspect apis:subscribers <apiId>
+winspect apis:subscribers <apiId> --output json
+```
+
+### Subscriptions
+
+```bash
+# List subscriptions for your org
+winspect subscriptions:list
+winspect subscriptions:list --status pending
+winspect subscriptions:list --output json
+```
+
+### Org & Team Management
+
+```bash
+# Show org info
+winspect orgs:info
+
+# List teams
+winspect teams:list
+winspect teams:list --output json
+
+# Show team members
+winspect teams:members <teamId>
+```
+
+---
+
+## Output Formats
+
+All commands support `--output table` (default) and `--output json`. JSON output is designed to be piped to `jq` or used in CI scripts:
+
+```bash
+# Get all active API IDs as a JSON array
+winspect apis:list --status active --output json | jq '[.[].apiId]'
+
+# Check if a specific API exists
+winspect apis:list --output json | jq '.[] | select(.apiName == "Payments API")'
+```
+
+---
+
+## CI/CD Integration
+
+Example GitHub Actions step to publish an API on merge to main:
+
+```yaml
+- name: Publish API to Winspect
+  env:
+    WINSPECT_ORG_ID: ${{ secrets.WINSPECT_ORG_ID }}
+    WINSPECT_API_KEY: ${{ secrets.WINSPECT_API_KEY }}
+  run: |
+    npx @winspect/cli apis:publish \
+      --name "${{ env.API_NAME }}" \
+      --version "${{ github.ref_name }}" \
+      --spec-file ./openapi.yaml \
+      --team "${{ env.TEAM_ID }}"
+```
+
+---
+
+## Technical Design
+
+**Framework**: [oclif](https://oclif.io) — battle-tested Node.js CLI framework (used by Heroku, Salesforce). Supports plugin architecture, auto-generated help, and typed flags.
+
+**HTTP client**: The CLI uses the same platform-backend-service REST API as the UI. Auth via `X-API-Key` header (org API key) or `Authorization: Bearer <PAT>` (personal access token).
+
+**Distribution**: Published to npm as `@winspect/cli`. Versioned and released via GitHub Actions.
+
+**Config file format** (`~/.winspect/config.json`):
+```json
+{
+  "org_id": "org-abc123",
+  "api_key": "wsk_live_...",
+  "base_url": "https://api.winspect.io"
+}
+```
+
+---
+
+## Backlog
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| bl-029 | Bootstrap winspect-cli repo | P1 |
+| bl-030 | CLI commands — API management | P1 |
+| bl-031 | CLI commands — subscriptions and subscribers | P1 |
+| bl-032 | CLI commands — org and team management | P2 |
+
+---
+
+## Repository
+
+**New repo**: `winspect-cli` (TypeScript, Node.js, oclif, npm package)
+
+See [repositories](/architecture/repositories) for full details.
+
+---
+
+## Decision
+
+See [PDR-006](/decisions/PDR-006-agentic-integration) for the architectural decision record covering this feature and the MCP server.

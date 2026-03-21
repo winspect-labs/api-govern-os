@@ -1,7 +1,7 @@
 ---
 title: Target Audience
 category: product
-last_updated: 2026-03-01
+last_updated: 2026-03-18
 ---
 
 # Target Audience
@@ -10,18 +10,55 @@ last_updated: 2026-03-01
 
 - **Company size:** 50–500 engineers
 - **Stage:** Growth-stage, API-first or platform-heavy
-- **Stack:** Kubernetes, microservices, OpenAPI/Swagger
-- **Pain:** API sprawl, no single inventory, authorization scattered, slow onboarding to internal APIs
+- **Stack:** Kubernetes, microservices, OpenAPI/Swagger; beginning to adopt AI agents internally
+- **Pain:** API sprawl today + early signs of MCP server sprawl; authorization scattered; slow onboarding to internal APIs; no way to control which agents access which internal tools
+
+---
 
 ## Personas
 
-### Platform Engineer (Primary)
+### Platform Engineer (Primary Buyer)
+
 - Owns internal developer experience and API governance
 - Frustrated by manual API registration and scattered authorization logic
-- Wants discovery that works (K8s, semantic search) and authorization that flows from the catalog
+- Starting to see AI-related requests: "can our agent call the payments API?", "who owns the MCP server the data team deployed?"
+- Wants discovery that works (K8s, semantic search), authorization that flows from the catalog, and a governance framework that covers both REST APIs and MCP servers
 - Values simplicity and integration with existing auth (Clerk, Auth0, custom)
+- **New pain added by MCP era:** Being asked to govern agent access with no tooling for it
 
 ### API Owner / Team Lead (Secondary)
+
 - Owns one or more APIs consumed by other teams
 - Wants clear subscription workflow, approval, and visibility into who uses what
 - Cares about governance without becoming a bottleneck
+- **New concern:** Their team is now also shipping an MCP server — wants the same governance model to apply without learning a new system
+
+### AI/ML Engineer or Agent Developer (Emerging Persona)
+
+- Building AI agents that consume internal APIs and MCP servers
+- Needs a way to register agent identities, request access to MCP servers, and get scoped tokens
+- Frustrated by informal access grants ("just use the shared API key") or no access control at all
+- Wants a self-service subscription workflow instead of escalating to platform teams for every new agent
+
+### Engineering Manager / VP Engineering (Economic Buyer)
+
+- Concerned about governance, compliance, and audit trails as AI usage grows
+- Wants a platform that handles both the API sprawl problem they already have and the MCP governance problem they can see coming
+- Values reducing the number of tools the platform team maintains
+
+---
+
+## Secondary Markets
+
+### ISVs / SaaS Companies Exposing MCP Servers
+
+Companies that expose MCP servers to their customers (not just internal tooling) need governance infrastructure for:
+- Which customer agents are subscribed to which tools
+- Rate limiting per customer/tenant
+- Quality control on their own tool descriptions before public listing
+
+Winspect's multi-tenant subscription model applies directly to this use case.
+
+### Regulated Industries (Later)
+
+Financial services, healthcare, and public sector organizations with strict audit requirements for who accessed what internal data. The audit trail from subscription-based authz (both API and MCP) provides the evidence trail compliance teams need.

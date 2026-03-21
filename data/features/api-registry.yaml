@@ -1,0 +1,83 @@
+# API registry — versioning, read API, public index
+# ====================================================
+
+features:
+  - id: spec-versioning
+    name: Spec version history
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      Immutable spec_record_versions (or equivalent); tags like Docker (org/name:tag);
+      latest pointer; supports winspect pull and winspect log.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: registry-read-api
+    name: Registry read endpoints
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      GET /registry/{org}/{name} and GET /registry/{org}/{name}/{version} for pulling specs;
+      optional list versions endpoint.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: breaking-change-detection
+    name: Breaking change detection on publish
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - platform-backend-service
+      - winspect-cli
+    description: >
+      openapi-diff (or oasdiff) on publish; store summary; CLI --check-breaking and winspect diff.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: mock-regenerate-on-publish
+    name: Mock server auto-regenerate on spec publish
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      After CLI or sync updates spec, regenerate mock response variants so stable mock URL reflects new spec.
+    goal_ids:
+      - developer-adoption
+      - core-platform
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: public-registry
+    name: Public API registry index
+    status: planned
+    priority: P2
+    completion: 0
+    repos:
+      - api-management-ui
+      - platform-backend-service
+    description: >
+      Opt-in public APIs at app.winspect.io/registry; SEO and winspect search --public.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/api-registry

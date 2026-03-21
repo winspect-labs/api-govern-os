@@ -1,0 +1,35 @@
+---
+title: Free tier & plan enforcement
+category: feature
+status: planned
+priority: P0
+owners: ["platform-backend-service", "api-management-ui"]
+last_updated: 2026-03-18
+tags: ["billing", "limits", "mock", "spectral", "plans"]
+---
+
+# Free tier and plan enforcement
+
+Organisation plans (FREE / PRO / ENTERPRISE) with enforceable limits: teams, mock server count, mock request rate per day, lint report retention, and optional mock TTL for inactive servers. Spectral custom ruleset persistence moves from in-memory stub to database (Pro).
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P0" />
+
+## Free tier (target)
+
+- Up to 5 teams per org; unlimited API specs
+- Limited mock servers and daily mock call quota
+- Built-in Spectral rulesets; custom rulesets Pro
+- MCP and CLI available on free tier to drive adoption
+
+## Related backlog
+
+| Item | ID |
+|------|-----|
+| Organisation plan model + PlanEnforcementService | bl-056 |
+| Mock call rate limiting | bl-057 |
+| Spectral ruleset DB persistence | bl-058 |
+| Mock TTL / inactivity policy | bl-061 |
+
+See `data/features/free-tier.yaml`.

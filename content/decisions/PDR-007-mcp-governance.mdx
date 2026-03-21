@@ -1,0 +1,159 @@
+---
+title: "PDR-007: MCP Server Governance"
+category: decision
+status: proposed
+last_updated: 2026-03-18
+---
+
+# PDR-007: MCP Server Governance
+
+**Status:** Proposed  
+**Date:** 2026-03-18  
+**Deciders:** Product, Platform Engineering
+
+---
+
+## Context
+
+MCP (Model Context Protocol) has crossed the adoption threshold — 97M monthly SDK downloads as of February 2026, adopted by Anthropic, OpenAI, Google, Microsoft, Amazon. Organizations are already deploying MCP servers to give AI agents access to internal tools and data.
+
+The trajectory is clear: the same teams that suffered API sprawl will suffer MCP server sprawl. The governance problems are structurally identical:
+
+- No inventory of what MCP servers exist
+- No ownership model (who is responsible for this server?)
+- No quality standards (are tool descriptions actually useful to agents?)
+- No access control (which agents can call which tools?)
+- No rate limiting (what happens when an agent loops?)
+- No audit trail (which agent called what, when?)
+
+Winspect has already solved these problems for REST APIs. The question is whether to extend the governance model to MCP servers or leave this surface unaddressed.
+
+---
+
+## Decision
+
+**Extend Winspect to govern MCP servers as first-class entities alongside REST APIs.**
+
+The subscription-based governance model generalizes directly:
+
+| API Governance | MCP Governance |
+|----------------|----------------|
+| API registered by team | MCP server registered by team |
+| Team subscribes to API | Agent subscribes to MCP server |
+| POST /v1/authz/check | POST /v1/mcp-authz/check |
+| Subscription scope: VIEW/MANAGE/ADMIN | Subscription scope: read_tools/call_tools/admin_tools |
+| OAS spec linting | Tool manifest linting |
+| K8s runtime discovery | K8s MCP server discovery |
+
+This is not a separate product. It is a broadening of the governance surface using the same architecture.
+
+---
+
+## Rationale
+
+### Why now
+
+The window to establish governance standards is before sprawl sets in, not after. Teams are deploying their first MCP servers today. Once deployment patterns are entrenched, retrofitting governance is expensive.
+
+### Why not wait for market validation
+
+API sprawl governance was validated by the market. MCP servers are structurally identical — tools exposed over a protocol, consumed by clients (now agents instead of teams). The problem space is the same. The only question is timing, and early positioning in an emerging category has outsized value.
+
+### Why extend subscriptions instead of building a separate system
+
+The Subscription entity is the core of Winspect's value. It is the record that connects "who can access what" to "what permissions do they have." Extending it for agent identities is additive and non-breaking. A separate system would duplicate this logic and create a split governance model that is harder to reason about.
+
+### Why govern MCP servers that Winspect itself deploys vs. customer MCP servers
+
+Both. The `winspect-mcp-server` (PDR-006) is Winspect's own MCP server — it should itself be governed under this framework as a reference implementation. Customer MCP servers are what the product governs. This is not a contradiction; it is dogfooding.
+
+---
+
+## What Changes
+
+### New entity: MCP Server
+
+```
+McpServer {
+  id, name, description
+  transport_url: string
+  tool_manifest: JSON (fetched at registration or uploaded)
+  owner_team_id: string
+  status: active | deprecated | experimental
+  quality_score: number (0–100, computed by linting engine)
+  created_at, updated_at
+}
+```
+
+### Extended entity: Subscription
+
+```
+Subscription {
+  subscriber_type: TEAM | AGENT         ← AGENT is new
+  resource_type:   API | MCP_SERVER     ← MCP_SERVER is new
+  resource_id:     string
+  scope:           string[]             ← for MCP: read_tools, call_tools, admin_tools
+  ...existing fields unchanged...
+}
+```
+
+### New entity: AgentIdentity
+
+```
+AgentIdentity {
+  id, client_id (generated), hashed_secret
+  name, description
+  owning_team_id
+  status: active | suspended
+}
+```
+
+### New ABAC resource type: mcp_server
+
+OPA policies extended with `mcp_server` resource type. Permission levels map:
+- `admin_tools` → ADMIN (owner team)
+- `call_tools` → MANAGE (approved subscriber)
+- `read_tools` → VIEW (introspect-only subscriber)
+
+### New API endpoints
+
+- `GET/POST/PATCH/DELETE /mcp-management/servers`
+- `POST /mcp-management/agent-identities`
+- `POST /mcp-management/servers/{id}/subscriptions`
+- `POST /v1/mcp-authz/check`
+
+---
+
+## Alternatives Considered
+
+### Alternative A: Separate product ("MCP Governance by Winspect")
+
+**Rejected.** Would require separate auth, separate data model, separate billing. The value of Winspect is unified governance. Splitting it creates two half-products.
+
+### Alternative B: Treat MCP servers as a type of API
+
+**Partially adopted.** MCP servers do share many properties with APIs and are stored in the same catalog UI. However, MCP-specific concerns (tool manifest linting, agent identity, tool-level authz, per-minute rate limits) are different enough to warrant a distinct resource type rather than shoehorning them into the API schema.
+
+### Alternative C: Partner with an MCP-native tool instead of building
+
+**Rejected.** There are no credible MCP governance tools as of Q1 2026. The space is open. Building gives Winspect first-mover advantage in a category that will matter.
+
+---
+
+## Risks
+
+| Risk | Mitigation |
+|------|-----------|
+| MCP protocol evolves (Anthropic changes spec) | Linting rules and manifest parsing are isolated in a plugin-style engine; protocol changes require updating the parser, not the entire governance model |
+| Customers don't annotate K8s workloads for discovery | Manual registration + bulk import workflow does not require K8s annotations; discovery is additive |
+| Agent identity management becomes complex | Start with simple client_id + secret; extend to JWT/OIDC in a later phase |
+| Governance adoption requires MCP servers to call authz check | Provide SDK helpers and documentation; make the integration &lt;5 lines of code |
+
+---
+
+## Related
+
+- [PDR-005: ABAC v2](/decisions/PDR-005-abac-v2) — existing ABAC model this extends
+- [PDR-006: Agentic Integration](/decisions/PDR-006-agentic-integration) — MCP server Winspect deploys
+- [Feature: MCP Governance](/features/mcp-governance)
+- [Feature: Subscription AuthZ](/features/subscription-authz)
