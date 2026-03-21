@@ -1,0 +1,53 @@
+# Free tier and plan enforcement
+# ===============================
+
+features:
+  - id: org-plan-model
+    name: Organisation plan model (FREE/PRO/ENTERPRISE)
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+      - api-management-ui
+    description: >
+      organisation_plans table; limits (teams, mock servers, mock calls/day); PlanEnforcementService;
+      HTTP 402 on limit exceeded; foundation for future billing integration.
+    goal_ids:
+      - developer-adoption
+      - production-launch
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: mock-rate-limiting
+    name: Mock server call rate limiting
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      Per-mock-server daily counters; 429 with upgrade URL for free tier; optional TTL for inactive mocks.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: spectral-ruleset-persistence
+    name: Spectral ruleset DB persistence
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - platform-backend-service
+      - api-management-ui
+    description: >
+      Replace in-memory spectral stub with persisted custom rulesets; Pro tier; CLI --org-ruleset fetch.
+    goal_ids:
+      - developer-adoption
+      - core-platform
+    links:
+      - label: Spec
+        url: /features/free-tier

@@ -794,3 +794,360 @@ items:
     links:
       - label: Spec
         url: /features/mcp-governance
+
+  # ── Developer adoption (CLI, registry, free tier, hosted MCP) ─────────────
+
+  - id: bl-042
+    title: winspect CLI core (auth, config, publish, mock, lint)
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 8
+      ease: 6
+    description: TypeScript CLI with Commander; browser login exchanging to named org API key; ~/.winspect/config.json; publish via discovery sync; mock create/list/url; Spectral lint; CI env auto-detection and .winspect.yaml.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-043
+    title: winspect init onboarding (spec detect, CODEOWNERS, first publish)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 8
+    description: Scan for openapi.yaml; optional CODEOWNERS team default; write .winspect.yaml; run first publish; print mock URL — target under 30s to value.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-044
+    title: winspect pull, search, diff, log, status commands
+    status: planned
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 7
+      ease: 6
+    description: pull from registry endpoints; search via RAG; diff versions; version history log; org status overview — depends on registry read API and versioning.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-045
+    title: winspect team commands (list, create, invite, members)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 8
+    description: CLI surface for team management aligned with org plan limits (free tier max teams).
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-046
+    title: winspect mcp url and mcp test commands
+    status: planned
+    priority: P1
+    ice:
+      impact: 8
+      confidence: 8
+      ease: 9
+    description: Print hosted MCP URL and sample Cursor/Claude config; verify MCP health — thin client until hosted MCP server ships.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-047
+    title: CLI distribution (npm, Homebrew tap, single binary, curl installer)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Publish @winspect/cli to npm; Homebrew formula; pkg/esbuild binaries on GitHub Releases; install.winspect.io script for CI.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-048
+    title: publish-api-spec-action GitHub Action (PR comment outputs)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 8
+    description: Marketplace action installing CLI; inputs spec path, check-breaking, strict; outputs mock-url, spec-url, api-id for workflow composition and PR comments.
+    goal_ids:
+      - developer-adoption
+    feature_id: github-action
+    links:
+      - label: Spec
+        url: /features/github-action
+
+  - id: bl-049
+    title: CLI opt-in telemetry (commands, exit codes, CI detection)
+    status: planned
+    priority: P2
+    ice:
+      impact: 5
+      confidence: 9
+      ease: 9
+    description: Anonymous telemetry with opt-out via config or WINSPECT_TELEMETRY=false; no spec content.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-050
+    title: Backend CLI source type and POST /cli/auth/complete (org API key for CLI login)
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 8
+    description: SpecRecord SourceType CLI; endpoint to complete browser login and create named org API key returned to CLI; extend discovery sync for CLI publish metadata.
+    goal_ids:
+      - developer-adoption
+      - production-launch
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-051
+    title: Spec version history (spec_record_versions, tags, latest pointer)
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Immutable rows per publish; semver or git-sha tags; migration from single-row spec records; enables pull @version and changelog correlation.
+    goal_ids:
+      - developer-adoption
+    feature_id: spec-versioning
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-052
+    title: Registry read endpoints GET /registry/{org}/{name}[/{version}]
+    status: planned
+    priority: P0
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 7
+    description: Authenticated and optional public read for opt-in APIs; list versions endpoint; powers winspect pull.
+    goal_ids:
+      - developer-adoption
+    feature_id: registry-read-api
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-053
+    title: Breaking change diff on publish (openapi-diff / oasdiff, stored summary)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 8
+      ease: 5
+    description: Server-side diff vs latest; store JSON summary on version row; CLI --check-breaking gates CI.
+    goal_ids:
+      - developer-adoption
+    feature_id: breaking-change-detection
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-054
+    title: Mock server auto-regenerate variants after spec publish
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 8
+    description: Hook ApiSpecSyncService / registry update path to call mock generation when API has mock server — stable mock UUID, updated responses.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-regenerate-on-publish
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-055
+    title: Public API registry index (opt-in, SEO, winspect search --public)
+    status: planned
+    priority: P2
+    ice:
+      impact: 8
+      confidence: 6
+      ease: 5
+    description: UI at app.winspect.io/registry; public read API for opted-in APIs; drives discovery and growth.
+    goal_ids:
+      - developer-adoption
+    feature_id: public-registry
+    links:
+      - label: Spec
+        url: /features/api-registry
+
+  - id: bl-056
+    title: Organisation plan model and PlanEnforcementService (FREE/PRO/ENTERPRISE)
+    status: planned
+    priority: P0
+    ice:
+      impact: 10
+      confidence: 9
+      ease: 6
+    description: organisation_plans table; limits teams, mock count, mock calls/day; 402 with upgrade URL; UI surfacing plan.
+    goal_ids:
+      - developer-adoption
+      - production-launch
+    feature_id: org-plan-model
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-057
+    title: Mock server call rate limiting (free tier daily quota)
+    status: planned
+    priority: P0
+    ice:
+      impact: 8
+      confidence: 9
+      ease: 7
+    description: Per-mock-server daily counter (DB or Redis); 429 + upgrade messaging; aligns with free tier mock_calls_per_day.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-rate-limiting
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-058
+    title: Spectral ruleset DB persistence (replace Next.js in-memory stub)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 9
+      ease: 7
+    description: Persist custom rulesets in Java backend; Pro tier feature; CLI winspect lint --org-ruleset fetches from API.
+    goal_ids:
+      - developer-adoption
+    feature_id: spectral-ruleset-persistence
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-059
+    title: Hosted MCP server at mcp.winspect.io/org/{orgId}/mcp
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 7
+      ease: 5
+    description: JSON-RPC MCP exposing list_apis, search_apis, get_api_spec, get_mock_url; Bearer org key; backed by RAG and catalog services.
+    goal_ids:
+      - developer-adoption
+      - ai-discoverability
+    feature_id: hosted-mcp-server
+    links:
+      - label: Spec
+        url: /features/hosted-mcp-server
+
+  - id: bl-060
+    title: MCP tool implementations (list_apis, search_apis, get_spec, get_mock_url)
+    status: planned
+    priority: P1
+    ice:
+      impact: 9
+      confidence: 7
+      ease: 6
+    description: Concrete tool handlers and schemas for Cursor/Claude Desktop integration; integration tests.
+    goal_ids:
+      - developer-adoption
+    feature_id: hosted-mcp-server
+    links:
+      - label: Spec
+        url: /features/hosted-mcp-server
+
+  - id: bl-061
+    title: Free tier mock TTL policy (deactivate after prolonged inactivity)
+    status: planned
+    priority: P2
+    ice:
+      impact: 5
+      confidence: 8
+      ease: 8
+    description: Optional job to soft-disable mocks unused 90+ days with email warnings; re-enable via CLI or UI — protects shared infra cost.
+    goal_ids:
+      - developer-adoption
+    feature_id: mock-rate-limiting
+    links:
+      - label: Spec
+        url: /features/free-tier
+
+  - id: bl-062
+    title: winspect diff command (local vs published, semver pair)
+    status: planned
+    priority: P1
+    ice:
+      impact: 7
+      confidence: 8
+      ease: 7
+    description: Client-side oasdiff for winspect diff openapi.yaml and winspect diff name@v1 v2; complements server-side breaking detection on publish.
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: bl-063
+    title: winspect log command (version history table)
+    status: planned
+    priority: P2
+    ice:
+      impact: 6
+      confidence: 8
+      ease: 8
+    description: Pretty-print version history from spec_record_versions — timestamps, git SHAs, breaking flags; depends on spec versioning (bl-051).
+    goal_ids:
+      - developer-adoption
+    feature_id: winspect-cli
+    links:
+      - label: Spec
+        url: /features/winspect-cli

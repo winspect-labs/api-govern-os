@@ -59,11 +59,24 @@ repositories:
 
   - id: winspect-cli
     name: winspect-cli
-    purpose: Developer CLI (npm package) for publishing APIs, listing subscribers, searching, and managing subscriptions from the terminal or CI/CD pipelines.
+    purpose: >
+      Public developer CLI — oclif/Commander-based npm package for API publishing, registry sync, mock servers,
+      Spectral lint, CI/GitHub Action; aligns with agentic-integration (bl-029–bl-032) and developer-adoption (bl-042+).
     tech:
       - TypeScript
       - Node.js
       - oclif
+      - Commander.js
+      - Spectral
       - npm
     status: planned
     url: https://github.com/winspect-labs/winspect-cli
+
+  - id: publish-api-spec-action
+    name: publish-api-spec-action
+    purpose: GitHub Action wrapper for winspect publish — CI publish and optional PR comments with mock URL
+    tech:
+      - GitHub Actions
+      - Node.js
+    status: planned
+    url: https://github.com/winspect-labs/publish-api-spec-action

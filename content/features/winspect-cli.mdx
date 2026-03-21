@@ -1,0 +1,39 @@
+---
+title: winspect CLI
+category: feature
+status: planned
+priority: P0
+owners: ["winspect-cli", "platform-backend-service"]
+last_updated: 2026-03-18
+tags: ["cli", "developer-tooling", "publish", "mock", "lint", "ci"]
+---
+
+# winspect CLI
+
+Public TypeScript CLI for authenticating to Winspect (browser login → named org API key), publishing OpenAPI specs, creating mock servers, linting with Spectral, and listing/pulling/searching APIs. Targets npm (`@winspect/cli`), Homebrew, and standalone binaries.
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P0" />
+
+**Completion: ~0%** — Tracked in Product OS; implementation in `winspect-cli` repo (planned).
+
+## Scope
+
+- **Auth:** `winspect auth login|logout|status|token|switch` — store config under `~/.winspect/config.json`
+- **Publish:** `winspect publish` — CI env auto-detection (GitHub, GitLab, Bitbucket), `.winspect.yaml`, lint gate, `--check-breaking`
+- **Mock:** `winspect mock create|list|url|delete|regenerate-key|logs`
+- **Lint:** `winspect lint` — bundled Spectral; `--org-ruleset` when server persistence exists
+- **Registry:** `winspect pull|search|diff|log|status` — depends on registry read API and version history
+- **Teams:** `winspect team list|create|invite|members`
+- **MCP:** `winspect mcp url|test` — prints hosted MCP URL for AI tools
+- **Onboarding:** `winspect init` — detect spec, optional CODEOWNERS, first publish
+
+## Related backlog
+
+See `bl-022` through `bl-030`, `bl-042`, `bl-043` in `data/backlog.yaml`.
+
+## Repositories
+
+- [winspect-cli](https://github.com/winspect-labs/winspect-cli) (planned)
+- [platform-backend-service](https://github.com/winspect-labs/platform-backend-service) — CLI auth completion endpoint, sync API

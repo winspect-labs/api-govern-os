@@ -1,3 +1,6 @@
+# MCP server features — standalone connector, Anthropic directory, and hosted org endpoint
+# =========================================================================================
+
 features:
   - id: mcp-server
     name: Winspect MCP Server
@@ -39,3 +42,21 @@ features:
         url: /features/mcp-server
       - label: Anthropic Connector Submission
         url: https://claude.com/docs/connectors/building/submission
+
+  - id: hosted-mcp-server
+    name: Hosted MCP server per organisation
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - platform-backend-service
+    description: >
+      Platform-hosted MCP JSON-RPC endpoint (e.g. mcp.winspect.io/org/{orgId}/mcp) with tools such as
+      list_apis, search_apis, get_api_spec, get_mock_url; Bearer org API key; complements the standalone
+      winspect-mcp-server repo and Claude Connector work.
+    goal_ids:
+      - developer-adoption
+      - ai-discoverability
+    links:
+      - label: Spec
+        url: /features/hosted-mcp-server

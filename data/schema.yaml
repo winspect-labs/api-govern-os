@@ -128,10 +128,19 @@ domains:
     description: Notify API subscribers on spec changes via UI, email, and Slack; changelog and release notes on updates
   - id: mcp-server
     file: data/features/mcp-server.yaml
-    description: Remote MCP server exposing Winspect as a set of AI-agent-callable tools; Claude connector for the official Anthropic directory
+    description: Remote MCP server, Claude connector, and hosted per-org MCP endpoint for AI tools
   - id: developer-cli
     file: data/features/developer-cli.yaml
     description: winspect-cli — TypeScript CLI for publishing APIs, listing subscribers, searching, and managing subscriptions from the terminal or CI/CD
   - id: mcp-governance
     file: data/features/mcp-governance.yaml
     description: MCP server catalog, team ownership, linting/quality control, agent subscription authz, rate limits, and K8s MCP discovery — governance layer for MCP server sprawl
+  - id: developer-tooling
+    file: data/features/developer-tooling.yaml
+    description: Public winspect CLI (registry-focused), GitHub Action, CI integration, and developer onboarding
+  - id: api-registry
+    file: data/features/api-registry.yaml
+    description: Spec versioning, registry read API, breaking change detection, public index
+  - id: free-tier
+    file: data/features/free-tier.yaml
+    description: Organisation plans (FREE/PRO), limits, mock rate limiting, Spectral persistence

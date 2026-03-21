@@ -25,6 +25,8 @@ quarters:
       - External AuthZ REST API
       - GitHub spec sync integration
       - Usage analytics foundation
+      - winspect CLI v1 (auth, publish, mock, lint) and organisation plan model (FREE/PRO)
+      - Backend endpoints for CLI login and registry read API (foundation)
     status: planned
 
   - id: Q3-2026
@@ -37,6 +39,11 @@ quarters:
       - MCP subscription and org tools (bl-024, bl-025)
       - winspect-cli bootstrap and API management commands (bl-029, bl-030)
       - CLI subscription and org commands (bl-031, bl-032)
+      - winspect CLI distribution (npm, Homebrew, single binary) — developer adoption (bl-047)
+      - GitHub Action publish-api-spec to Marketplace (bl-048)
+      - Hosted MCP server per org (mcp.winspect.io) — bl-059, bl-060
+      - Spec version history and breaking change diff on publish — bl-051–bl-053
+      - Public API registry (opt-in discoverability) — bl-055
     status: planned
 
   - id: Q4-2026
@@ -45,7 +52,9 @@ quarters:
       - MCP publish_api tool with destructive annotations (bl-026)
       - MCP server OAuth 2.0 for Claude Connector Directory (bl-027)
       - Claude Connector Directory submission (bl-028)
+      - SDKs (TS, Python, Java, Go) alongside CLI maturity
       - Enterprise readiness (audit, SLA)
+      - Enterprise CLI features (SAML, audit hooks) and plugin groundwork
     status: planned
 
   - id: Q1-2027

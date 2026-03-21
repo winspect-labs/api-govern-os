@@ -1,0 +1,33 @@
+---
+title: API registry (versioning & read API)
+category: feature
+status: planned
+priority: P0
+owners: ["platform-backend-service", "winspect-cli"]
+last_updated: 2026-03-18
+tags: ["registry", "versioning", "openapi", "breaking-changes"]
+---
+
+# API registry
+
+Immutable spec versions, registry read endpoints (`GET /registry/{org}/{name}[/{version}]`), breaking-change detection on publish, mock variant regeneration after publish, and optional public index for opt-in discoverability.
+
+## Status
+
+<StatusBadge status="planned" /> <PriorityBadge priority="P0" />
+
+**Completion: ~0%**
+
+## Capabilities
+
+| Capability | Backlog ID |
+|------------|------------|
+| Spec version history (`spec_record_versions`) | bl-031 |
+| Registry read endpoints | bl-032 |
+| Breaking change diff storage | bl-033 |
+| Mock auto-regenerate on publish | bl-034 |
+| Public registry index | bl-035 |
+
+## Related features (data)
+
+See `data/features/api-registry.yaml` — `spec-versioning`, `registry-read-api`, `breaking-change-detection`, `mock-regenerate-on-publish`, `public-registry`.

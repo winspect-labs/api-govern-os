@@ -1,0 +1,39 @@
+# Developer tooling — public CLI and GitHub Action
+# ================================================
+
+features:
+  - id: winspect-cli
+    name: winspect CLI
+    status: planned
+    priority: P0
+    completion: 0
+    repos:
+      - winspect-cli
+      - platform-backend-service
+      - api-management-ui
+    description: >
+      Public TypeScript CLI for auth (browser login → org API key), publish, mock create,
+      lint (Spectral), pull/search/diff, team commands, CI env auto-detection, .winspect.yaml,
+      and opt-in telemetry. Primary distribution npm (@winspect/cli), then Homebrew and single binary.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/winspect-cli
+
+  - id: github-action
+    name: publish-api-spec GitHub Action
+    status: planned
+    priority: P1
+    completion: 0
+    repos:
+      - publish-api-spec-action
+      - winspect-cli
+    description: >
+      Thin GitHub Action that installs winspect CLI and runs publish; outputs api-id, mock-url,
+      spec-url, lint-score for PR comments and downstream steps.
+    goal_ids:
+      - developer-adoption
+    links:
+      - label: Spec
+        url: /features/github-action

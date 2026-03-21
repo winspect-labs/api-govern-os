@@ -46,6 +46,15 @@ goals:
     status: active
     target_date: Q3 2026
 
+  - id: developer-adoption
+    title: Developer Adoption via CLI and Free Tier
+    description: >
+      Make Winspect the go-to API registry for individual developers and small teams.
+      Ship a public CLI, GitHub Action, free tier, and hosted MCP server to drive
+      viral adoption before enterprise monetization.
+    status: active
+    target_date: Q3 2026
+
   - id: mcp-governance
     title: MCP Server Governance
     description: >
