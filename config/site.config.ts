@@ -21,7 +21,7 @@
 import type { BrandingConfig, ThemeConfig } from '../lib/theme'
 
 /** GitHub repository URL. Used for Edit on GitHub, feedback links, and project icon. */
-export const repository = 'https://github.com/nakulshukla08/api-govern-os'
+export const repository = 'https://github.com/winspect-labs/api-govern-os'
 
 export const branding: BrandingConfig = {
   productName: 'Winspect',

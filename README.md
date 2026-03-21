@@ -6,7 +6,7 @@ The core idea: product knowledge and code should stay in sync. Agents read this 
 
 ## Feedback
 
-Found a bug, have a feature idea, or want to improve the docs? [Open an issue](https://github.com/nakulshukla08/api-govern-os/issues/new/choose). We have templates for bug reports, feature requests, and documentation feedback.
+Found a bug, have a feature idea, or want to improve the docs? [Open an issue](https://github.com/winspect-labs/api-govern-os/issues/new/choose). We have templates for bug reports, feature requests, and documentation feedback.
 
 ## Documentation
 
@@ -30,7 +30,7 @@ Data lives in `data/features/*.yaml` per domain. See `data/schema.yaml` for the 
 ## Quick Start
 
 ```bash
-git clone https://github.com/nakulshukla08/api-govern-os.git
+git clone https://github.com/winspect-labs/api-govern-os.git
 cd api-govern-os
 npm install
 npm run dev
@@ -63,7 +63,7 @@ Branding and theme in **`config/site.config.ts`**:
 
 ## Deployment
 
-Deploy to Vercel. Connect the repo, add env vars if using auth. The build includes Pagefind postbuild for search.
+Deploy to Vercel. **Import your fork** (not the original repo) as a new project. See [docs/VERCEL_FORK_DEPLOYMENT.md](docs/VERCEL_FORK_DEPLOYMENT.md) if your fork shows the original's site. Add env vars if using auth. The build includes Pagefind postbuild for search.
 
 ## License
 

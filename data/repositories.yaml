@@ -43,7 +43,7 @@ repositories:
       - Nextra
       - MDX
     status: active
-    url: https://github.com/nakulshukla08/api-govern-os
+    url: https://github.com/winspect-labs/api-govern-os
 
   - id: winspect-mcp-server
     name: winspect-mcp-server
