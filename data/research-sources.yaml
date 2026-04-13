@@ -3,6 +3,17 @@
 # AGENTS: Before citing a source in content/research/, add it here.
 
 sources:
+  - id: postman-state-of-api-2025
+    title: Postman 2025 State of the API Report
+    url: https://www.postman.com/state-of-api/2025/
+    date: 2025-01-01
+    type: industry-survey
+    credibility: high
+    notes: >
+      Annual developer/architect/executive survey (5,700+ respondents in 2025 edition).
+      Primary artifacts are the interactive report and downloadable PDF
+      (https://voyager.postman.com/doc/postman-state-of-the-api-report-2025.pdf).
+
   - id: api-management-market-2025
     title: API Management Market Analysis 2025
     url: https://www.gartner.com/en/documents/api-management
